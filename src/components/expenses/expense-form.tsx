@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -46,15 +46,34 @@ export function ExpenseForm({ addExpense, onFormSubmit }: ExpenseFormProps) {
       category: undefined,
     },
   });
+  
+  const { watch, formState: { isValid } } = form;
+  const watchedValues = watch();
 
-  const onSubmit = (values: FormValues) => {
-    addExpense({
-      ...values,
-      date: values.date.toISOString(),
-      category: values.category as ExpenseCategory,
-    });
-    onFormSubmit?.();
-  };
+  useEffect(() => {
+    const autoSave = () => {
+      if (isValid) {
+        const values = form.getValues();
+        addExpense({
+          ...values,
+          date: values.date.toISOString(),
+          category: values.category as ExpenseCategory,
+        });
+        toast({
+          title: 'Expense Added!',
+          description: `${values.reason} for $${values.amount.toFixed(2)} was saved.`,
+        });
+        onFormSubmit?.();
+      }
+    };
+
+    if (isExtracting) return;
+    
+    const timeoutId = setTimeout(autoSave, 500); // Debounce to avoid rapid saving
+    return () => clearTimeout(timeoutId);
+
+  }, [watchedValues, isValid, addExpense, onFormSubmit, toast, form, isExtracting]);
+
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,17 +86,19 @@ export function ExpenseForm({ addExpense, onFormSubmit }: ExpenseFormProps) {
       const dataUri = reader.result as string;
       try {
         const result = await getExpenseDetailsFromImage(dataUri);
-        form.setValue('amount', parseFloat(result.amount.replace(/[^0-9.-]+/g,"")));
-        form.setValue('reason', result.vendor);
         const parsedDate = new Date(result.date);
-        if(!isNaN(parsedDate.getTime())) {
-          form.setValue('date', parsedDate);
-        }
-        form.setValue('category', result.category as ExpenseCategory);
-        toast({
-          title: 'Details Extracted!',
-          description: 'Please review and confirm the extracted expense details.',
-        });
+        
+        const newExpense = {
+          amount: parseFloat(result.amount.replace(/[^0-9.-]+/g,"")),
+          reason: result.vendor,
+          date: !isNaN(parsedDate.getTime()) ? parsedDate : new Date(),
+          category: result.category as ExpenseCategory,
+        };
+
+        form.reset(newExpense);
+        
+        // This will trigger the useEffect to auto-save
+        
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -102,16 +123,16 @@ export function ExpenseForm({ addExpense, onFormSubmit }: ExpenseFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+      <form className="space-y-6 p-1">
         
-        <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
+        <input type="file" accept="image/*" capture="environment" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
         <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={isExtracting}>
           {isExtracting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <ImageIcon className="mr-2 h-4 w-4" />
           )}
-          Upload a Receipt
+          Scan a Receipt
         </Button>
         
         <FormField
@@ -202,10 +223,6 @@ export function ExpenseForm({ addExpense, onFormSubmit }: ExpenseFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Save Expense
-        </Button>
       </form>
     </Form>
   );

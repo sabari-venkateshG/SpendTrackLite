@@ -10,11 +10,15 @@ import { getExpenseDetailsFromImage } from '@/app/actions';
 import type { ExpenseCategory } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ExpenseForm } from '@/components/expenses/expense-form';
+
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +73,10 @@ export default function HomePage() {
   const handleAddExpenseClick = () => {
     fileInputRef.current?.click();
   };
+  
+  const handleFormSubmit = () => {
+    setIsSheetOpen(false);
+  };
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -100,12 +108,22 @@ export default function HomePage() {
         {isProcessing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Plus className="h-6 w-6" />}
       </Button>
       
-      <div className="hidden md:block fixed bottom-8 right-8">
-        <Button size="lg" className="h-12 gap-2" onClick={handleAddExpenseClick} disabled={isProcessing}>
-            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus/>} 
-            Add Expense
-        </Button>
-      </div>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetTrigger asChild>
+          <div className="hidden md:block fixed bottom-8 right-8">
+            <Button size="lg" className="h-12 gap-2" disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus/>} 
+                Add Expense
+            </Button>
+          </div>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Add a New Expense</SheetTitle>
+          </SheetHeader>
+          <ExpenseForm addExpense={addExpense} onFormSubmit={handleFormSubmit} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
