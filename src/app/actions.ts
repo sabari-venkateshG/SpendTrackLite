@@ -9,6 +9,6 @@ export async function getExpenseDetailsFromImage(photoDataUri: string): Promise<
     return result;
   } catch (error) {
     console.error("AI expense extraction failed:", error);
-    throw new Error("Failed to extract details from the receipt image. Please try again or enter manually.");
+    throw new Error("Failed to extract details from the receipt image. Please try again.");
   }
 }

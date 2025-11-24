@@ -73,6 +73,7 @@ export function ExpenseForm({ addExpense, onFormSubmit }: ExpenseFormProps) {
         if(!isNaN(parsedDate.getTime())) {
           form.setValue('date', parsedDate);
         }
+        form.setValue('category', result.category as ExpenseCategory);
         toast({
           title: 'Details Extracted!',
           description: 'Please review and confirm the extracted expense details.',
@@ -180,7 +181,7 @@ export function ExpenseForm({ addExpense, onFormSubmit }: ExpenseFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
