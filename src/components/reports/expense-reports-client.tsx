@@ -1,0 +1,201 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import type { Expense } from '@/lib/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, parseISO, format } from 'date-fns';
+import { CATEGORIES } from '@/lib/constants';
+
+type TimeRange = 'monthly' | '6-month' | 'annual';
+
+const COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+  '#f59e0b',
+  '#10b981',
+];
+
+export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
+  const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
+
+  const filteredData = useMemo(() => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = now;
+
+    switch (timeRange) {
+      case 'monthly':
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
+      case '6-month':
+        startDate = startOfMonth(subMonths(now, 5));
+        break;
+      case 'annual':
+        startDate = startOfYear(now);
+        endDate = endOfYear(now);
+        break;
+    }
+
+    return expenses.filter(expense => {
+      const expenseDate = parseISO(expense.date);
+      return expenseDate >= startDate && expenseDate <= endDate;
+    });
+  }, [expenses, timeRange]);
+
+  const totalSpent = useMemo(() => filteredData.reduce((acc, exp) => acc + exp.amount, 0), [filteredData]);
+  const averageSpent = useMemo(() => filteredData.length > 0 ? totalSpent / filteredData.length : 0, [totalSpent, filteredData]);
+  const transactionCount = useMemo(() => filteredData.length, [filteredData]);
+
+  const categoryData = useMemo(() => {
+    const categoryMap = new Map<string, number>();
+    filteredData.forEach(exp => {
+      categoryMap.set(exp.category, (categoryMap.get(exp.category) || 0) + exp.amount);
+    });
+    return Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value }));
+  }, [filteredData]);
+
+  const trendData = useMemo(() => {
+    const trendMap = new Map<string, number>();
+    const now = new Date();
+    
+    if (timeRange === 'monthly') {
+      filteredData.forEach(exp => {
+        const day = format(parseISO(exp.date), 'MMM d');
+        trendMap.set(day, (trendMap.get(day) || 0) + exp.amount);
+      });
+    } else { // 6-month or annual
+      filteredData.forEach(exp => {
+        const month = format(parseISO(exp.date), 'MMM yyyy');
+        trendMap.set(month, (trendMap.get(month) || 0) + exp.amount);
+      });
+    }
+
+    let data = Array.from(trendMap.entries()).map(([name, total]) => ({ name, total }));
+
+    if (timeRange === '6-month' || timeRange === 'annual') {
+      data.sort((a,b) => new Date(a.name).getTime() - new Date(b.name).getTime());
+      data = data.map(d => ({...d, name: d.name.split(' ')[0]}));
+    }
+
+    return data;
+
+  }, [filteredData, timeRange]);
+  
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="rounded-lg border bg-background p-2 shadow-sm">
+          <p className="font-bold">{label}</p>
+          <p className="text-sm text-primary">{`Total: $${payload[0].value.toFixed(2)}`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  if (expenses.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-2xl font-bold mb-2">No Data for Reports</h2>
+        <p className="text-muted-foreground">Start adding expenses to see your reports here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+      <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
+        <TabsList>
+          <TabsTrigger value="monthly">This Month</TabsTrigger>
+          <TabsTrigger value="6-month">Last 6 Months</TabsTrigger>
+          <TabsTrigger value="annual">This Year</TabsTrigger>
+        </TabsList>
+        <TabsContent value={timeRange} className="mt-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Total Spent</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">${totalSpent.toFixed(2)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{transactionCount}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Avg. Transaction</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">${averageSpent.toFixed(2)}</p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="mt-8 grid gap-8 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Spending by Category</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {categoryData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        nameKey="name"
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : <p className="text-muted-foreground text-center py-12">No data for this period.</p>}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Spending Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {trendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={trendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(value) => `$${value}`} tick={{ fontSize: 12 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                    <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+                ) : <p className="text-muted-foreground text-center py-12">No data for this period.</p>}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
