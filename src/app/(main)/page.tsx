@@ -121,7 +121,7 @@ export default function HomePage() {
           <SheetHeader>
             <SheetTitle>Add a New Expense</SheetTitle>
           </SheetHeader>
-          <ExpenseForm addExpense={addExpense} onFormSubmit={handleFormSubmit} />
+          <ExpenseForm expense={null} onSave={addExpense} onFormSubmit={handleFormSubmit} />
         </SheetContent>
       </Sheet>
     </div>
