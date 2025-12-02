@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { WelcomeScreen } from '@/components/welcome-screen';
+import { ExpenseProvider } from '@/context/expense-context';
 
 export default function MainLayout({
   children,
@@ -52,42 +53,44 @@ export default function MainLayout({
 
   return (
     <>
-      <WelcomeScreen isVisible={showWelcome} />
-      <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-20 border-b bg-card/80 backdrop-blur-sm">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4">
-            <Link href="/" className="flex items-center gap-2 text-lg font-bold">
-              <Logo className="h-6 w-6 text-primary" />
-              <span className="font-headline">SpendTrack Lite</span>
-            </Link>
-            <div className="hidden items-center gap-4 md:flex">
-                <nav className="flex items-center gap-2">
-                {navItems.map((item) => (
-                  <Button
-                    key={item.href}
-                    variant="ghost"
-                    asChild
-                    className={cn(
-                      pathname === item.href
-                        ? 'text-primary'
-                        : 'text-foreground'
-                    )}
-                  >
-                    <Link href={item.href}>{item.label}</Link>
-                  </Button>
-                ))}
-              </nav>
-              <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)}>
-                <Settings className="h-5 w-5" />
-                <span className="sr-only">Settings</span>
-              </Button>
+      <ExpenseProvider>
+        <WelcomeScreen isVisible={showWelcome} />
+        <div className="flex min-h-screen flex-col">
+          <header className="sticky top-0 z-20 border-b bg-card/80 backdrop-blur-sm">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4">
+              <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+                <Logo className="h-6 w-6 text-primary" />
+                <span className="font-headline">SpendTrack Lite</span>
+              </Link>
+              <div className="hidden items-center gap-4 md:flex">
+                  <nav className="flex items-center gap-2">
+                  {navItems.map((item) => (
+                    <Button
+                      key={item.href}
+                      variant="ghost"
+                      asChild
+                      className={cn(
+                        pathname === item.href
+                          ? 'text-primary'
+                          : 'text-foreground'
+                      )}
+                    >
+                      <Link href={item.href}>{item.label}</Link>
+                    </Button>
+                  ))}
+                </nav>
+                <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)}>
+                  <Settings className="h-5 w-5" />
+                  <span className="sr-only">Settings</span>
+                </Button>
+              </div>
             </div>
-          </div>
-        </header>
-        <main className="flex-1 pb-24 md:pb-8">{children}</main>
-        <BottomNav />
-        <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
-      </div>
+          </header>
+          <main className="flex-1 pb-24 md:pb-8">{children}</main>
+          <BottomNav />
+          <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+        </div>
+      </ExpenseProvider>
     </>
   );
 }
