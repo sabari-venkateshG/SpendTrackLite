@@ -23,6 +23,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     try {
       const localData = localStorage.getItem('expenses');
       const parsedExpenses = localData ? JSON.parse(localData) : [];
+      // Ensure sorting is always applied when reading data
       parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
       return parsedExpenses;
     } catch (error) {
