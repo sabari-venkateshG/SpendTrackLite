@@ -17,32 +17,22 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Function to save to localStorage
-  const saveLocalExpenses = useCallback((expensesToSave: Expense[]) => {
-    if (typeof window === 'undefined') return;
+  // Function to get from localStorage
+  const getLocalExpenses = useCallback((): Expense[] => {
+    if (typeof window === 'undefined') return [];
     try {
-      localStorage.setItem('expenses', JSON.stringify(expensesToSave));
+      const localData = localStorage.getItem('expenses');
+      const parsedExpenses = localData ? JSON.parse(localData) : [];
+      parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return parsedExpenses;
     } catch (error) {
-      console.error("Error saving expenses to localStorage", error);
+      console.error("Error reading expenses from localStorage", error);
+      return [];
     }
   }, []);
 
   // Effect for initial load and cross-tab sync
   useEffect(() => {
-    const getLocalExpenses = (): Expense[] => {
-      if (typeof window === 'undefined') return [];
-      try {
-        const localData = localStorage.getItem('expenses');
-        const parsedExpenses = localData ? JSON.parse(localData) : [];
-        // Ensure data is always sorted
-        parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        return parsedExpenses;
-      } catch (error) {
-        console.error("Error reading expenses from localStorage", error);
-        return [];
-      }
-    };
-    
     // Initial load
     setExpenses(getLocalExpenses());
     setIsInitialized(true);
@@ -59,7 +49,17 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     return () => {
         window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [getLocalExpenses]);
+  
+  // Function to save to localStorage
+  const saveLocalExpenses = (expensesToSave: Expense[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem('expenses', JSON.stringify(expensesToSave));
+    } catch (error) {
+      console.error("Error saving expenses to localStorage", error);
+    }
+  };
 
   const addExpense = useCallback((newExpenseData: Omit<Expense, 'id' | 'owner'>) => {
     const newExpense: Expense = {
@@ -74,7 +74,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       saveLocalExpenses(updatedExpenses);
       return updatedExpenses;
     });
-  }, [saveLocalExpenses]);
+  }, []);
 
   const removeExpense = useCallback((id: string) => {
     setExpenses(prevExpenses => {
@@ -82,7 +82,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       saveLocalExpenses(updatedExpenses);
       return updatedExpenses;
     });
-  }, [saveLocalExpenses]);
+  }, []);
 
   const value = { expenses, addExpense, removeExpense, isInitialized };
 
