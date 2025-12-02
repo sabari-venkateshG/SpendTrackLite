@@ -1,29 +1,37 @@
-
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { Plus, Loader2 } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
+import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
 import { ExpenseList } from '@/components/expenses/expense-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getExpenseDetailsFromImage } from '@/app/actions';
 import type { ExpenseCategory, Expense } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ExpenseForm } from '@/components/expenses/expense-form';
 import { TickAnimation } from '@/components/tick-animation';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CATEGORIES } from '@/lib/constants';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
+  const { settings } = useSettings();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Partial<Expense> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: settings.currency,
+    }).format(amount);
+  };
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -60,7 +68,7 @@ export default function HomePage() {
                 <TickAnimation />
                 <div className="text-center">
                   <p className="font-bold text-lg">Expense Added!</p>
-                  <p>{newExpense.reason} for ${newExpense.amount.toFixed(2)}</p>
+                  <p>{newExpense.reason} for {formatCurrency(newExpense.amount)}</p>
                 </div>
               </div>
             ),
@@ -90,7 +98,7 @@ export default function HomePage() {
         description: 'Could not read the selected image file.',
       });
     };
-  }, [addExpense, toast]);
+  }, [addExpense, toast, settings.currency]);
 
   const handleAddManually = () => {
     setEditingExpense(null);
@@ -107,13 +115,28 @@ export default function HomePage() {
             <TickAnimation />
             <div className="text-center">
                 <p className="font-bold text-lg">Expense Saved!</p>
-                <p>{expense.reason} for ${expense.amount.toFixed(2)}</p>
+                <p>{expense.reason} for {formatCurrency(expense.amount)}</p>
             </div>
           </div>
         ),
         duration: 3000,
       });
   };
+
+  const categoryTotals = useMemo(() => {
+    const totals = new Map<ExpenseCategory, number>();
+    CATEGORIES.forEach(cat => totals.set(cat.name, 0));
+    expenses.forEach(expense => {
+      totals.set(expense.category, (totals.get(expense.category) || 0) + expense.amount);
+    });
+    return Array.from(totals.entries())
+      .map(([name, total]) => ({
+        name,
+        total,
+        icon: CATEGORIES.find(c => c.name === name)?.icon,
+      }))
+      .filter(item => item.total > 0);
+  }, [expenses]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -127,9 +150,31 @@ export default function HomePage() {
       />
 
       {isInitialized ? (
-        <ExpenseList expenses={expenses} removeExpense={removeExpense} />
+        <div className="space-y-8">
+          {categoryTotals.length > 0 && (
+             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {categoryTotals.map(({ name, total, icon: Icon }) => (
+                <Card key={name}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{name}</CardTitle>
+                    {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(total)}</div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          <ExpenseList expenses={expenses} removeExpense={removeExpense} />
+        </div>
       ) : (
         <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
@@ -147,9 +192,12 @@ export default function HomePage() {
       </Button>
       
       {/* Desktop Button */}
-      <div className="hidden md:block fixed bottom-8 right-8">
+      <div className="hidden md:block fixed bottom-8 right-8 space-x-2">
+         <Button size="lg" className="h-14 gap-2 text-lg" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
+            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5"/>} 
+            Scan Receipt
+        </Button>
         <Button size="lg" className="h-14 gap-2 text-lg" onClick={handleAddManually}>
-            <Plus/> 
             Add Manually
         </Button>
       </div>
@@ -165,5 +213,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

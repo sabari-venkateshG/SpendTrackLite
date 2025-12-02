@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/hooks/use-settings';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -17,7 +17,7 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'INR'];
 
 export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const { settings, setSettings, isInitialized } = useSettings();

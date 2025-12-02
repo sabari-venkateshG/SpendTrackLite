@@ -17,7 +17,7 @@ export default function MainLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 border-b bg-card/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-20 border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold">
             <Logo className="h-6 w-6 text-primary" />
@@ -31,7 +31,7 @@ export default function MainLayout({
           </div>
         </div>
       </header>
-      <main className="flex-1 pb-20 md:pb-4">{children}</main>
+      <main className="flex-1 pb-24 md:pb-8">{children}</main>
       <BottomNav />
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>
