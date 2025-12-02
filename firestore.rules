@@ -1,0 +1,38 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // USERS
+    // A user's public profile
+    match /users/{userId} {
+      allow get: if true;
+      allow create, update: if isOwner(userId)
+        && request.resource.data.keys().hasAll(['displayName', 'email'])
+        && (!request.resource.data.keys().has('photoURL') || request.resource.data.photoURL is string)
+        && request.resource.data.displayName is string
+        && request.resource.data.email is string;
+    }
+
+    // EXPENSES
+    // An expense owned by a user
+    match /users/{userId}/expenses/{expenseId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId)
+            && request.resource.data.owner == userId
+            && request.resource.data.amount is number
+            && request.resource.data.reason is string
+            && request.resource.data.date is string
+            && request.resource.data.category is string
+            && ['Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Shopping', 'Travel', 'Education', 'Gifts', 'Fuel', 'Other'].hasAny([request.resource.data.category]);
+        allow update: if isOwner(userId)
+            && request.resource.data.owner == userId;
+    }
+  }
+}

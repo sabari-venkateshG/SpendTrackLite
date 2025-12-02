@@ -1,0 +1,86 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's public profile information.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the user's profile picture."
+        }
+      },
+      "required": ["displayName", "email"]
+    },
+    "Expense": {
+        "title": "Expense",
+        "description": "Represents a single expense record.",
+        "type": "object",
+        "properties": {
+            "amount": {
+                "type": "number",
+                "description": "The monetary value of the expense."
+            },
+            "reason": {
+                "type": "string",
+                "description": "The description or vendor for the expense."
+            },
+            "date": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The date of the expense in ISO 8601 format."
+            },
+            "category": {
+                "type": "string",
+                "description": "The category of the expense.",
+                "enum": [
+                    "Food",
+                    "Transport",
+                    "Utilities",
+                    "Entertainment",
+                    "Health",
+                    "Shopping",
+                    "Travel",
+                    "Education",
+                    "Gifts",
+                    "Fuel",
+                    "Other"
+                ]
+            },
+            "owner": {
+                "type": "string",
+                "description": "The UID of the user who owns this expense."
+            }
+        },
+        "required": ["amount", "reason", "date", "category", "owner"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public profile information for each user."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+        "schema": {
+            "$ref": "#/entities/Expense"
+        },
+        "description": "Stores expense records for each user."
+    }
+  }
+}
