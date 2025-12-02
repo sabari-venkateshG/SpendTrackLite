@@ -20,6 +20,7 @@ const defaultSettings: Settings = {
   theme: 'system',
 };
 
+// Explicitly map currency codes to their symbols to ensure correctness.
 const currencySymbols: { [key: string]: string } = {
     USD: '$',
     EUR: '€',
@@ -76,12 +77,16 @@ export function useSettings() {
   }, [setTheme]);
 
   const formatCurrency = useCallback((amount: number) => {
+    // Directly use the symbol from our explicit map.
     const symbol = currencySymbols[settings.currency] || '$';
-    // Use a basic formatter that doesn't rely on locale-specific symbols
+    
+    // Format the number part using a locale-agnostic method.
     const formattedAmount = amount.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
+    
+    // Combine the correct symbol with the formatted number.
     return `${symbol}${formattedAmount}`;
   }, [settings.currency]);
 
