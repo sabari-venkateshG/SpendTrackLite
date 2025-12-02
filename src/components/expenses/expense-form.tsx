@@ -35,7 +35,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: expense?.amount || undefined,
+      amount: expense?.amount || 0,
       reason: expense?.reason || '',
       date: expense?.date ? new Date(expense.date) : new Date(),
       category: expense?.category || undefined,
