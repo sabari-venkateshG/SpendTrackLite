@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,11 +28,11 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const [currency, setCurrency] = useState('');
 
   useEffect(() => {
-    if (isInitialized && isOpen) {
+    if (isInitialized) {
       setName(settings.name);
       setCurrency(settings.currency);
     }
-  }, [settings, isInitialized, isOpen]);
+  }, [settings.name, settings.currency, isInitialized]);
 
   const handleSave = () => {
     setSettings({ name, currency });

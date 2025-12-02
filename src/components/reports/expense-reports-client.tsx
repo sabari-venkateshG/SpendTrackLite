@@ -118,15 +118,16 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
 
   const handleExport = () => {
     const headers = ["Date", "Reason", "Category", "Amount"];
-    const csvContent = [
-      headers.join(','),
-      ...filteredData.map(exp => [
-        format(parseISO(exp.date), 'yyyy-MM-dd'),
-        `"${exp.reason.replace(/"/g, '""')}"`,
-        exp.category,
-        exp.amount
-      ].join(','))
-    ].join('\n');
+    const rows = filteredData.map(exp => [
+      format(parseISO(exp.date), 'yyyy-MM-dd'),
+      `"${exp.reason.replace(/"/g, '""')}"`,
+      exp.category,
+      exp.amount.toFixed(2)
+    ].join(','));
+    
+    const totalRow = ["", "", "Total", totalSpent.toFixed(2)].join(',');
+
+    const csvContent = [headers.join(','), ...rows, '', totalRow].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -297,5 +298,3 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
     </div>
   );
 }
-
-    
