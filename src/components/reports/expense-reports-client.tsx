@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { Expense } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,13 +26,13 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
   const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
   const { settings } = useSettings();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = useCallback((amount: number) => {
+    return new Intl.NumberFormat(settings.currency === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
       currency: settings.currency,
       minimumFractionDigits: 2,
     }).format(amount);
-  };
+  }, [settings.currency]);
 
   const filteredData = useMemo(() => {
     const now = new Date();
@@ -246,7 +246,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
                   <BarChart data={trendData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(value: number) => `$${value}`} tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(value) => formatCurrency(Number(value))} tick={{ fontSize: 12 }} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
                     <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>

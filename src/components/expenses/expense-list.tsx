@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Expense } from '@/lib/types';
@@ -8,6 +9,7 @@ import { Trash2, ShoppingBag } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useSettings } from '@/hooks/use-settings';
+import { useCallback } from 'react';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -16,6 +18,13 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
   const { settings } = useSettings();
+
+  const formatCurrency = useCallback((amount: number) => {
+    return new Intl.NumberFormat(settings.currency === 'INR' ? 'en-IN' : 'en-US', {
+      style: 'currency',
+      currency: settings.currency,
+    }).format(amount);
+  }, [settings.currency]);
 
   if (expenses.length === 0) {
     return (
@@ -28,13 +37,6 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
       </div>
     );
   }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: settings.currency,
-    }).format(amount);
-  };
 
   return (
     <div className="space-y-4">

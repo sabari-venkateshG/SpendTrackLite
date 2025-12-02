@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Edit } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(settings.currency === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
       currency: settings.currency,
     }).format(amount);
@@ -165,15 +166,25 @@ export default function HomePage() {
         </div>
       )}
       
-      {/* Mobile FAB */}
-      <Button
-        className="fixed bottom-20 right-4 z-10 h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100 md:hidden"
-        aria-label="Add Expense"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isProcessing}
-      >
-        {isProcessing ? <Loader2 className="h-7 w-7 animate-spin" /> : <Plus className="h-8 w-8" />}
-      </Button>
+      {/* Mobile FABs */}
+      <div className="md:hidden fixed bottom-20 right-4 z-10 flex flex-col items-center gap-4">
+        <Button
+          className="h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
+          aria-label="Add Expense Manually"
+          onClick={handleAddManually}
+          variant="secondary"
+        >
+          <Edit className="h-7 w-7" />
+        </Button>
+        <Button
+          className="h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
+          aria-label="Scan Receipt"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isProcessing}
+        >
+          {isProcessing ? <Loader2 className="h-7 w-7 animate-spin" /> : <Plus className="h-8 w-8" />}
+        </Button>
+      </div>
       
       {/* Desktop Button */}
       <div className="hidden md:block fixed bottom-8 right-8 space-x-2">
