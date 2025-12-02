@@ -28,10 +28,20 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat(settings.currency === 'INR' ? 'en-IN' : 'en-US', {
-      style: 'currency',
-      currency: settings.currency,
-    }).format(amount);
+    // Determine the locale based on the currency. 'en-IN' for INR, default to 'en-US'.
+    const locale = settings.currency === 'INR' ? 'en-IN' : 'en-US';
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: settings.currency,
+      }).format(amount);
+    } catch (e) {
+      // Fallback for unsupported currencies
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(amount);
+    }
   }, [settings.currency]);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {

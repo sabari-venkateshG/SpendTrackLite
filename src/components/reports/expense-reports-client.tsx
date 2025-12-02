@@ -27,11 +27,21 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
   const { settings } = useSettings();
 
   const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat(settings.currency === 'INR' ? 'en-IN' : 'en-US', {
-      style: 'currency',
-      currency: settings.currency,
-      minimumFractionDigits: 2,
-    }).format(amount);
+    // Determine the locale based on the currency. 'en-IN' for INR, default to 'en-US'.
+    const locale = settings.currency === 'INR' ? 'en-IN' : 'en-US';
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: settings.currency,
+        minimumFractionDigits: 2,
+      }).format(amount);
+    } catch (e) {
+       return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+      }).format(amount);
+    }
   }, [settings.currency]);
 
   const filteredData = useMemo(() => {
