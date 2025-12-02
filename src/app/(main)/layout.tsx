@@ -11,7 +11,6 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { WelcomeScreen } from '@/components/welcome-screen';
-import { useIsClient } from '@/hooks/use-is-client';
 
 export default function MainLayout({
   children,
@@ -19,8 +18,8 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
-  const isClient = useIsClient();
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
 
   const navItems = [
@@ -29,18 +28,19 @@ export default function MainLayout({
   ];
   
   useEffect(() => {
-    if (!isClient) return;
+    setIsClient(true);
     const welcomeShown = sessionStorage.getItem('welcomeShown');
     if (welcomeShown) {
       setShowWelcome(false);
     } else {
+      setShowWelcome(true);
       const timer = setTimeout(() => {
         setShowWelcome(false);
         sessionStorage.setItem('welcomeShown', 'true');
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isClient]);
+  }, []);
 
   if (!isClient) {
     return (

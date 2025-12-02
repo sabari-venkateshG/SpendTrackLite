@@ -4,13 +4,11 @@
 import { useExpenses } from '@/hooks/use-expenses';
 import { ExpenseReportsClient } from '@/components/reports/expense-reports-client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useIsClient } from '@/hooks/use-is-client';
 
 export default function ReportsPage() {
   const { expenses, isInitialized } = useExpenses();
-  const isClient = useIsClient();
 
-  if (!isClient || !isInitialized) {
+  if (!isInitialized) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8 space-y-8">
         <Skeleton className="h-10 w-48" />

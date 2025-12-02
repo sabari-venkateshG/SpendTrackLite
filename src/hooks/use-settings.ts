@@ -9,13 +9,11 @@ type Theme = 'light' | 'dark' | 'system';
 export interface Settings {
   name: string;
   currency: string;
-  theme: Theme;
 }
 
 const defaultSettings: Settings = {
   name: 'There',
   currency: 'USD',
-  theme: 'system',
 };
 
 const currencySymbols: { [key: string]: string } = {
@@ -36,9 +34,6 @@ export function useSettings() {
   const loadLocalSettings = useCallback(() => {
     let loadedSettings = { ...defaultSettings };
     try {
-      const storedTheme = localStorage.getItem('spendtrack-lite-theme');
-      if (storedTheme) loadedSettings.theme = JSON.parse(storedTheme);
-      
       const storedSettings = localStorage.getItem('spendtrack-lite-settings');
       if (storedSettings) {
         const parsed = JSON.parse(storedSettings);
@@ -49,21 +44,36 @@ export function useSettings() {
       console.error("Failed to load settings from localStorage", e);
     }
     setSettingsState(loadedSettings);
-    if(loadedSettings.theme !== theme) setTheme(loadedSettings.theme);
     setIsInitialized(true);
-  }, [setTheme, theme]);
+  }, []);
 
 
   useEffect(() => {
     loadLocalSettings();
   }, [loadLocalSettings]);
 
-  const setSettings = useCallback((newSettings: Partial<Omit<Settings, 'theme'>>) => {
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'spendtrack-lite-settings') {
+        loadLocalSettings();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [loadLocalSettings]);
+
+
+  const setSettings = useCallback((newSettings: Partial<Settings>) => {
      setSettingsState(prev => {
         const updatedSettings = { ...prev, ...newSettings };
         localStorage.setItem('spendtrack-lite-settings', JSON.stringify({
           name: updatedSettings.name,
           currency: updatedSettings.currency
+        }));
+        // Manually dispatch a storage event to sync across tabs/components
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'spendtrack-lite-settings',
+          newValue: JSON.stringify(updatedSettings),
         }));
         return updatedSettings;
     });
@@ -71,8 +81,6 @@ export function useSettings() {
 
   const updateTheme = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
-    localStorage.setItem('spendtrack-lite-theme', JSON.stringify(newTheme));
-    setSettingsState(prev => ({...prev, theme: newTheme}));
   }, [setTheme]);
 
   const formatCurrency = useCallback((amount: number) => {
@@ -92,7 +100,8 @@ export function useSettings() {
   }, [settings.currency]);
 
   return { 
-      settings: { ...settings, theme: theme as Theme }, 
+      settings,
+      theme: (theme as Theme) || 'system',
       setSettings,
       setTheme: updateTheme, 
       isInitialized, 
