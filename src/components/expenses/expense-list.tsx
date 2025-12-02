@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useSettings } from '@/hooks/use-settings';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -14,9 +15,11 @@ interface ExpenseListProps {
 }
 
 export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
+  const { settings } = useSettings();
+
   if (expenses.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card p-12 text-center shadow-sm">
+      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card p-12 text-center shadow-sm min-h-[400px]">
         <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
         <h3 className="mt-4 text-lg font-semibold">No Expenses Yet</h3>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -26,6 +29,13 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
     );
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: settings.currency,
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-4">
       {expenses.map(expense => {
@@ -33,7 +43,7 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
         const Icon = category?.icon;
 
         return (
-          <Card key={expense.id} className="group transition-all hover:shadow-md">
+          <Card key={expense.id} className="group transition-all duration-200 ease-in-out hover:shadow-lg hover:border-primary/50">
             <div className="flex items-center p-4">
               {Icon && (
                 <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
@@ -48,7 +58,7 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold">
-                  ${expense.amount.toFixed(2)}
+                  {formatCurrency(expense.amount)}
                 </p>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

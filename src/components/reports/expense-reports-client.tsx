@@ -6,9 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, parseISO, format } from 'date-fns';
-import { CATEGORIES } from '@/lib/constants';
+import { useSettings } from '@/hooks/use-settings';
 
-type TimeRange = 'monthly' | '6-month' | 'annual';
 
 const COLORS = [
   'hsl(var(--chart-1))',
@@ -16,12 +15,19 @@ const COLORS = [
   'hsl(var(--chart-3))',
   'hsl(var(--chart-4))',
   'hsl(var(--chart-5))',
-  '#f59e0b',
-  '#10b981',
 ];
 
 export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
   const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
+  const { settings } = useSettings();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: settings.currency,
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
 
   const filteredData = useMemo(() => {
     const now = new Date();
@@ -60,9 +66,10 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
     return Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value }));
   }, [filteredData]);
 
+  type TimeRange = 'monthly' | '6-month' | 'annual';
+
   const trendData = useMemo(() => {
     const trendMap = new Map<string, number>();
-    const now = new Date();
     
     if (timeRange === 'monthly') {
       filteredData.forEach(exp => {
@@ -92,7 +99,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
       return (
         <div className="rounded-lg border bg-background p-2 shadow-sm">
           <p className="font-bold">{label}</p>
-          <p className="text-sm text-primary">{`Total: $${payload[0].value.toFixed(2)}`}</p>
+          <p className="text-sm text-primary">{`Total: ${formatCurrency(payload[0].value)}`}</p>
         </div>
       );
     }
@@ -124,7 +131,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
                 <CardTitle>Total Spent</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">${totalSpent.toFixed(2)}</p>
+                <p className="text-3xl font-bold">{formatCurrency(totalSpent)}</p>
               </CardContent>
             </Card>
             <Card>
@@ -140,7 +147,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
                 <CardTitle>Avg. Transaction</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">${averageSpent.toFixed(2)}</p>
+                <p className="text-3xl font-bold">{formatCurrency(averageSpent)}</p>
               </CardContent>
             </Card>
           </div>
@@ -168,7 +175,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -185,7 +192,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
                   <BarChart data={trendData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(value) => `$${value}`} tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(value: number) => `$${value}`} tick={{ fontSize: 12 }} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
                     <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
