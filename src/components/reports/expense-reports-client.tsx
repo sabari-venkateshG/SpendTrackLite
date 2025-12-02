@@ -36,6 +36,10 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
         minimumFractionDigits: 2,
       }).format(amount);
     } catch (e) {
+      // Fallback for unsupported currencies, explicitly handling INR as a special case if needed.
+       if (settings.currency === 'INR') {
+        return `₹${amount.toFixed(2)}`;
+      }
        return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',

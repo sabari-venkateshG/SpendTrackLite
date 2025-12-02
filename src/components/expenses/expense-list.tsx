@@ -29,7 +29,10 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
         currency: settings.currency,
       }).format(amount);
     } catch (e) {
-      // Fallback for unsupported currencies
+      // Fallback for unsupported currencies, explicitly handling INR as a special case if needed.
+      if (settings.currency === 'INR') {
+        return `₹${amount.toFixed(2)}`;
+      }
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -70,7 +73,7 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
                 </p>
               </div>
               <div className="ml-4 flex items-center">
-                <p className="text-md font-bold md:text-lg">
+                <p className="text-md font-bold text-right md:text-lg">
                   {formatCurrency(expense.amount)}
                 </p>
                 <AlertDialog>
@@ -78,7 +81,7 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:opacity-0"
+                      className="ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>

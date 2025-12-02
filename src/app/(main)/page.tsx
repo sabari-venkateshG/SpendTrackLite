@@ -36,7 +36,10 @@ export default function HomePage() {
         currency: settings.currency,
       }).format(amount);
     } catch (e) {
-      // Fallback for unsupported currencies
+      // Fallback for unsupported currencies, explicitly handling INR as a special case if needed.
+      if (settings.currency === 'INR') {
+        return `₹${amount.toFixed(2)}`;
+      }
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -182,7 +185,6 @@ export default function HomePage() {
           className="h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
           aria-label="Add Expense Manually"
           onClick={handleAddManually}
-          variant="secondary"
         >
           <Edit className="h-6 w-6" />
         </Button>
