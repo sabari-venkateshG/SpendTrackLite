@@ -21,7 +21,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') return [];
     try {
       const localData = localStorage.getItem('expenses');
-      return localData ? JSON.parse(localData) : [];
+      const parsedExpenses = localData ? JSON.parse(localData) : [];
+      parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return parsedExpenses;
     } catch (error) {
       console.error("Error reading expenses from localStorage", error);
       return [];
@@ -39,16 +41,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const localExpenses = getLocalExpenses();
-    localExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    setExpenses(localExpenses);
+    // Initial load from localStorage
+    setExpenses(getLocalExpenses());
     setIsInitialized(true);
 
     const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === 'expenses') {
-            const updatedExpenses = getLocalExpenses();
-            updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setExpenses(updatedExpenses);
+        if (e.key === 'expenses' || e.key === null) { // e.key is null for manual dispatch
+            setExpenses(getLocalExpenses());
         }
     };
     
@@ -61,26 +60,21 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, [getLocalExpenses]);
 
   const addExpense = useCallback((newExpenseData: Omit<Expense, 'id' | 'owner'>) => {
-    setExpenses(prevExpenses => {
-      const newExpense: Expense = {
-        ...newExpenseData,
-        id: new Date().toISOString() + Math.random().toString(), // Simple unique ID for local
-        owner: 'local',
-      };
-      const updatedExpenses = [newExpense, ...prevExpenses];
-      updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      saveLocalExpenses(updatedExpenses);
-      return updatedExpenses;
-    });
-  }, [saveLocalExpenses]);
+    const currentExpenses = getLocalExpenses();
+    const newExpense: Expense = {
+      ...newExpenseData,
+      id: new Date().toISOString() + Math.random().toString(), // Simple unique ID for local
+      owner: 'local',
+    };
+    const updatedExpenses = [newExpense, ...currentExpenses];
+    saveLocalExpenses(updatedExpenses);
+  }, [getLocalExpenses, saveLocalExpenses]);
 
   const removeExpense = useCallback((id: string) => {
-    setExpenses(prevExpenses => {
-      const updatedExpenses = prevExpenses.filter(exp => exp.id !== id);
-      saveLocalExpenses(updatedExpenses);
-      return updatedExpenses;
-    });
-  }, [saveLocalExpenses]);
+    const currentExpenses = getLocalExpenses();
+    const updatedExpenses = currentExpenses.filter(exp => exp.id !== id);
+    saveLocalExpenses(updatedExpenses);
+  }, [getLocalExpenses, saveLocalExpenses]);
 
   const value = { expenses, addExpense, removeExpense, isInitialized };
 
