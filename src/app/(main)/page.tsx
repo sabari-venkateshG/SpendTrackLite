@@ -119,6 +119,8 @@ export default function HomePage() {
       }))
       .filter(item => item.total > 0);
   }, [expenses, isInitialized]);
+  
+  const sortedExpenses = useMemo(() => [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [expenses]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -171,7 +173,7 @@ export default function HomePage() {
           {expenses.length > 0 ? (
             <ScrollArea className="h-[calc(100vh-450px)]">
               <div className="space-y-4 pr-4">
-                {expenses.map(expense => {
+                {[...expenses].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(expense => {
                   const category = CATEGORIES.find(c => c.name === expense.category);
                   const Icon = category?.icon;
 
