@@ -21,17 +21,17 @@ const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'INR'];
 
 export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const { settings, setSettings, isInitialized } = useSettings();
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
-  const [name, setName] = useState(settings.name);
-  const [currency, setCurrency] = useState(settings.currency);
+  const [name, setName] = useState('');
+  const [currency, setCurrency] = useState('');
 
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && isOpen) {
       setName(settings.name);
       setCurrency(settings.currency);
     }
-  }, [settings, isInitialized]);
+  }, [settings, isInitialized, isOpen]);
 
   const handleSave = () => {
     setSettings({ name, currency });
@@ -67,7 +67,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
           </div>
           <div className="space-y-2">
             <Label>Theme</Label>
-            <Tabs defaultValue={settings.theme} className="w-full">
+            <Tabs value={theme} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="light" onClick={() => setTheme('light')}>
                         <Sun className="mr-2 h-4 w-4" /> Light
