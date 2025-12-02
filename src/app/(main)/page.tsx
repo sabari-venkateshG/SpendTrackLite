@@ -26,12 +26,12 @@ export default function HomePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: settings.currency,
     }).format(amount);
-  };
+  }, [settings.currency]);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -95,9 +95,9 @@ export default function HomePage() {
     setEditingExpense(null);
     toast({
         description: (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 text-center">
             <TickAnimation />
-            <div className="text-center">
+            <div>
                 <p className="font-bold text-lg">Expense Saved!</p>
                 <p>{expense.reason} for {formatCurrency(expense.amount)}</p>
             </div>
@@ -138,7 +138,7 @@ export default function HomePage() {
           {categoryTotals.length > 0 && (
              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {categoryTotals.map(({ name, total, icon: Icon }) => (
-                <Card key={name}>
+                <Card key={name} className="transition-all hover:shadow-lg hover:-translate-y-1">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{name}</CardTitle>
                     {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
@@ -177,11 +177,11 @@ export default function HomePage() {
       
       {/* Desktop Button */}
       <div className="hidden md:block fixed bottom-8 right-8 space-x-2">
-         <Button size="lg" className="h-14 gap-2 text-lg" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
+         <Button size="lg" className="h-14 gap-2 text-lg transition-transform hover:scale-105" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
             {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5"/>} 
             Scan Receipt
         </Button>
-        <Button size="lg" className="h-14 gap-2 text-lg" onClick={handleAddManually}>
+        <Button size="lg" variant="secondary" className="h-14 gap-2 text-lg transition-transform hover:scale-105" onClick={handleAddManually}>
             Add Manually
         </Button>
       </div>

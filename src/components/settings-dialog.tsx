@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/hooks/use-settings';
-import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -24,15 +24,15 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const { settings, setSettings, isInitialized } = useSettings();
   const { setTheme, theme } = useTheme();
 
-  const [name, setName] = useState('');
-  const [currency, setCurrency] = useState('');
+  const [name, setName] = useState(settings.name);
+  const [currency, setCurrency] = useState(settings.currency);
 
   useEffect(() => {
     if (isInitialized) {
       setName(settings.name);
       setCurrency(settings.currency);
     }
-  }, [settings.name, settings.currency, isInitialized]);
+  }, [settings.name, settings.currency, isInitialized, isOpen]);
 
   const handleSave = () => {
     setSettings({ name, currency });
@@ -68,12 +68,12 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
           </div>
           <div className="space-y-2">
             <Label>Theme</Label>
-            <Tabs value={theme} className="w-full">
+             <Tabs value={theme} onValueChange={setTheme} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="light" onClick={() => setTheme('light')}>
+                    <TabsTrigger value="light">
                         <Sun className="mr-2 h-4 w-4" /> Light
                     </TabsTrigger>
-                    <TabsTrigger value="dark" onClick={() => setTheme('dark')}>
+                    <TabsTrigger value="dark">
                         <Moon className="mr-2 h-4 w-4" /> Dark
                     </TabsTrigger>
                 </TabsList>

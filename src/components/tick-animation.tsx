@@ -7,12 +7,12 @@ export function TickAnimation() {
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 130.2 130.2"
-      className="h-20 w-20"
+      className="h-12 w-12"
     >
       <circle
         className="path circle"
         fill="none"
-        stroke="hsl(var(--primary))"
+        stroke="hsl(var(--success))"
         strokeWidth="6"
         strokeMiterlimit="10"
         cx="65.1"
@@ -22,7 +22,7 @@ export function TickAnimation() {
       <polyline
         className="path check"
         fill="none"
-        stroke="hsl(var(--primary))"
+        stroke="hsl(var(--success))"
         strokeWidth="6"
         strokeLinecap="round"
         strokeMiterlimit="10"
@@ -52,5 +52,3 @@ export function TickAnimation() {
     </svg>
   );
 }
-
-    
