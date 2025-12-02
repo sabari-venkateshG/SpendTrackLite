@@ -5,7 +5,7 @@
 // Import necessary React and Firebase modules
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { firebaseApp } from '@/firebase/config';
+import { getFirebase } from '@/firebase/config';
 
 // Define the shape of the authentication context
 interface AuthContextType {
@@ -28,7 +28,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     // Get the Firebase auth instance
-    const auth = getAuth(firebaseApp);
+    const { auth } = getFirebase();
+    if (!auth) {
+        setLoading(false);
+        return;
+    };
     // Set up a listener for authentication state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);

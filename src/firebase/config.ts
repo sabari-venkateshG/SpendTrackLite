@@ -17,32 +17,46 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let firestore: Firestore | null = null;
+
 function initializeFirebase() {
-  if (typeof window === "undefined") {
-    return { app: null, auth: null, firestore: null };
-  }
+  if (typeof window !== "undefined") {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      firestore = getFirestore(app);
 
-  const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-
-  if (process.env.NEXT_PUBLIC_EMULATOR_HOST) {
-    const host = process.env.NEXT_PUBLIC_EMULATOR_HOST;
-    try {
-      console.log(`Connecting to Firebase emulators at ${host}`);
-      connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
-      connectFirestoreEmulator(firestore, host, 8080);
-    } catch (e) {
-      console.error('Error connecting to Firebase emulators:');
-      console.error(e);
+      if (process.env.NEXT_PUBLIC_EMULATOR_HOST) {
+        const host = process.env.NEXT_PUBLIC_EMULATOR_HOST;
+        try {
+          console.log(`Connecting to Firebase emulators at ${host}`);
+          connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+          connectFirestoreEmulator(firestore, host, 8080);
+        } catch (e) {
+          console.error('Error connecting to Firebase emulators:');
+          console.error(e);
+        }
+      }
+    } else {
+      app = getApp();
+      auth = getAuth(app);
+      firestore = getFirestore(app);
     }
   }
   return { app, auth, firestore };
 }
 
-const { app, auth, firestore } = initializeFirebase();
+function getFirebase() {
+    if(!app) {
+        initializeFirebase();
+    }
+    return { app, auth, firestore };
+}
+
 
 export const firebaseApp = app;
 export const firebaseAuth = auth;
 export const firebaseFirestore = firestore;
+export { getFirebase };
