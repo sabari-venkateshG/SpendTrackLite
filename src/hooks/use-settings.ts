@@ -19,6 +19,16 @@ const defaultSettings: Settings = {
   theme: 'system',
 };
 
+const currencySymbols: { [key: string]: string } = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    JPY: '¥',
+    CAD: 'CA$',
+    AUD: 'A$',
+    INR: '₹',
+};
+
 export function useSettings() {
   const [settings, setSettingsState] = useState<Settings>(defaultSettings);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -64,5 +74,15 @@ export function useSettings() {
     });
   }, [setTheme]);
 
-  return { settings: { ...settings, theme: theme as Theme }, setSettings, isInitialized };
+  const formatCurrency = useCallback((amount: number) => {
+    const symbol = currencySymbols[settings.currency] || '$';
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount);
+    return `${symbol}${formattedAmount}`;
+  }, [settings.currency]);
+
+
+  return { settings: { ...settings, theme: theme as Theme }, setSettings, isInitialized, formatCurrency };
 }

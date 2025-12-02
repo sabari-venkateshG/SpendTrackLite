@@ -19,33 +19,13 @@ import { CATEGORIES } from '@/lib/constants';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
-  const { settings } = useSettings();
+  const { formatCurrency } = useSettings();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Partial<Expense> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const formatCurrency = useCallback((amount: number) => {
-    // Determine the locale based on the currency. 'en-IN' for INR, default to 'en-US'.
-    const locale = settings.currency === 'INR' ? 'en-IN' : 'en-US';
-    try {
-      return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: settings.currency,
-      }).format(amount);
-    } catch (e) {
-      // Fallback for unsupported currencies, explicitly handling INR as a special case if needed.
-      if (settings.currency === 'INR') {
-        return `₹${amount.toFixed(2)}`;
-      }
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
-    }
-  }, [settings.currency]);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -182,6 +162,7 @@ export default function HomePage() {
       {/* Mobile FABs */}
       <div className="md:hidden fixed bottom-20 right-4 z-10 flex flex-row items-center gap-3">
         <Button
+          variant="secondary"
           className="h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
           aria-label="Add Expense Manually"
           onClick={handleAddManually}

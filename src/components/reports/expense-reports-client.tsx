@@ -24,29 +24,7 @@ const COLORS = [
 
 export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
   const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
-  const { settings } = useSettings();
-
-  const formatCurrency = useCallback((amount: number) => {
-    // Determine the locale based on the currency. 'en-IN' for INR, default to 'en-US'.
-    const locale = settings.currency === 'INR' ? 'en-IN' : 'en-US';
-    try {
-      return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: settings.currency,
-        minimumFractionDigits: 2,
-      }).format(amount);
-    } catch (e) {
-      // Fallback for unsupported currencies, explicitly handling INR as a special case if needed.
-       if (settings.currency === 'INR') {
-        return `₹${amount.toFixed(2)}`;
-      }
-       return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2,
-      }).format(amount);
-    }
-  }, [settings.currency]);
+  const { formatCurrency } = useSettings();
 
   const filteredData = useMemo(() => {
     const now = new Date();
