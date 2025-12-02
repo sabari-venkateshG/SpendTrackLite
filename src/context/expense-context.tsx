@@ -17,36 +17,39 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const getLocalExpenses = useCallback((): Expense[] => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const localData = localStorage.getItem('expenses');
-      const parsedExpenses = localData ? JSON.parse(localData) : [];
-      parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return parsedExpenses;
-    } catch (error) {
-      console.error("Error reading expenses from localStorage", error);
-      return [];
-    }
-  }, []);
-
+  // Function to save to localStorage
   const saveLocalExpenses = useCallback((expensesToSave: Expense[]) => {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem('expenses', JSON.stringify(expensesToSave));
-      // Manually dispatch a storage event to sync across tabs/windows
-      window.dispatchEvent(new StorageEvent('storage', { key: 'expenses' }));
     } catch (error) {
       console.error("Error saving expenses to localStorage", error);
     }
   }, []);
 
+  // Effect for initial load and cross-tab sync
   useEffect(() => {
-    // Initial load from localStorage
+    const getLocalExpenses = (): Expense[] => {
+      if (typeof window === 'undefined') return [];
+      try {
+        const localData = localStorage.getItem('expenses');
+        const parsedExpenses = localData ? JSON.parse(localData) : [];
+        // Ensure data is always sorted
+        parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return parsedExpenses;
+      } catch (error) {
+        console.error("Error reading expenses from localStorage", error);
+        return [];
+      }
+    };
+    
+    // Initial load
     setExpenses(getLocalExpenses());
     setIsInitialized(true);
 
+    // Listen for changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === 'expenses' || e.key === null) { // e.key is null for manual dispatch
+        if (e.key === 'expenses') {
             setExpenses(getLocalExpenses());
         }
     };
@@ -56,25 +59,30 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     return () => {
         window.removeEventListener('storage', handleStorageChange);
     };
-
-  }, [getLocalExpenses]);
+  }, []);
 
   const addExpense = useCallback((newExpenseData: Omit<Expense, 'id' | 'owner'>) => {
-    const currentExpenses = getLocalExpenses();
     const newExpense: Expense = {
       ...newExpenseData,
-      id: new Date().toISOString() + Math.random().toString(), // Simple unique ID for local
+      id: new Date().toISOString() + Math.random().toString(),
       owner: 'local',
     };
-    const updatedExpenses = [newExpense, ...currentExpenses];
-    saveLocalExpenses(updatedExpenses);
-  }, [getLocalExpenses, saveLocalExpenses]);
+    
+    setExpenses(prevExpenses => {
+      const updatedExpenses = [newExpense, ...prevExpenses];
+      updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      saveLocalExpenses(updatedExpenses);
+      return updatedExpenses;
+    });
+  }, [saveLocalExpenses]);
 
   const removeExpense = useCallback((id: string) => {
-    const currentExpenses = getLocalExpenses();
-    const updatedExpenses = currentExpenses.filter(exp => exp.id !== id);
-    saveLocalExpenses(updatedExpenses);
-  }, [getLocalExpenses, saveLocalExpenses]);
+    setExpenses(prevExpenses => {
+      const updatedExpenses = prevExpenses.filter(exp => exp.id !== id);
+      saveLocalExpenses(updatedExpenses);
+      return updatedExpenses;
+    });
+  }, [saveLocalExpenses]);
 
   const value = { expenses, addExpense, removeExpense, isInitialized };
 
