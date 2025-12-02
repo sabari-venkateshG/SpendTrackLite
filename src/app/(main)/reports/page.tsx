@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useExpenses } from '@/hooks/use-expenses';

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, addDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
 import { getFirebase } from '@/firebase/config';
 import { useUser } from '@/firebase';
 import type { Expense } from '@/lib/types';
@@ -16,13 +16,19 @@ export function useExpenses() {
 
   useEffect(() => {
     if (!user) {
-      setExpenses([]);
+      // If there's no user, we aren't fetching data.
+      // We can consider the hook "initialized" in this state.
       setIsInitialized(true);
       return;
     }
 
+    // Set loading state to true when user changes
+    setIsInitialized(false); 
     const { firestore } = getFirebase();
-    if (!firestore) return;
+    if (!firestore) {
+      setIsInitialized(true);
+      return;
+    }
 
     const expensesColRef = collection(firestore, 'users', user.uid, 'expenses');
     const q = query(expensesColRef, orderBy('date', 'desc'));
@@ -41,7 +47,7 @@ export function useExpenses() {
         title: "Error",
         description: "Could not fetch expenses.",
       });
-      setIsInitialized(true);
+      setIsInitialized(true); // Ensure initialization is true even on error
     });
 
     return () => unsubscribe();

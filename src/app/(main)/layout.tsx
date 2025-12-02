@@ -32,7 +32,6 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
       const result = await signInWithPopup(auth, provider);
       const loggedInUser = result.user;
       
-      // Check if user document exists, if not, create it
       const userDocRef = doc(firestore, "users", loggedInUser.uid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -41,7 +40,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
           displayName: loggedInUser.displayName,
           email: loggedInUser.email,
           photoURL: loggedInUser.photoURL,
-        });
+        }, { merge: true });
       }
 
     } catch (error) {
@@ -100,6 +99,7 @@ export default function MainLayout({
   ];
   
   useEffect(() => {
+    if (!isClient) return;
     const welcomeShown = sessionStorage.getItem('welcomeShown');
     if (welcomeShown) {
       setShowWelcome(false);
@@ -110,10 +110,14 @@ export default function MainLayout({
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isClient]);
 
   if (!isClient) {
-    return null;
+    return (
+       <div className="flex h-screen w-screen items-center justify-center">
+        <Logo className="h-20 w-20 animate-pulse text-primary" />
+      </div>
+    );
   }
 
   return (

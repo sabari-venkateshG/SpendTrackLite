@@ -32,57 +32,68 @@ const currencySymbols: { [key: string]: string } = {
 };
 
 export function useSettings() {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const [settings, setSettingsState] = useState<Settings>(defaultSettings);
   const [isInitialized, setIsInitialized] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
+    if (userLoading) {
+      setIsInitialized(false);
+      return;
+    }
+
     const loadSettings = async () => {
+      let loadedSettings = { ...defaultSettings };
+      
+      // Load theme from localStorage first
+      try {
+        const storedTheme = localStorage.getItem('spendtrack-lite-theme');
+        if (storedTheme) {
+          const themeValue = JSON.parse(storedTheme);
+          setTheme(themeValue);
+          loadedSettings.theme = themeValue;
+        }
+      } catch (error) {
+         console.error("Failed to parse theme from localStorage", error);
+      }
+
       if (user) {
         // User is logged in, load from Firestore
         const { firestore } = getFirebase();
-        if (!firestore) return;
+        if (!firestore) {
+            setIsInitialized(true);
+            return;
+        };
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const firestoreSettings = userDocSnap.data();
-          const newName = firestoreSettings.displayName || user.displayName || '';
-          const newCurrency = firestoreSettings.currency || defaultSettings.currency;
-          
-          setSettingsState(prev => ({...prev, name: newName, currency: newCurrency }));
-
+          loadedSettings.name = firestoreSettings.displayName || user.displayName || '';
+          loadedSettings.currency = firestoreSettings.currency || defaultSettings.currency;
         } else {
            // No settings in firestore, use defaults and user profile
-            setSettingsState(prev => ({ ...prev, name: user.displayName || '' }));
+           loadedSettings.name = user.displayName || '';
         }
       } else {
         // No user, load from localStorage
         try {
           const storedSettings = localStorage.getItem('spendtrack-lite-settings');
           if (storedSettings) {
-            setSettingsState(JSON.parse(storedSettings));
+             const parsed = JSON.parse(storedSettings);
+             loadedSettings.name = parsed.name || defaultSettings.name;
+             loadedSettings.currency = parsed.currency || defaultSettings.currency;
           }
         } catch (error) {
           console.error("Failed to parse settings from localStorage", error);
         }
       }
-       try {
-          const storedTheme = localStorage.getItem('spendtrack-lite-theme');
-          if (storedTheme) {
-            const themeValue = JSON.parse(storedTheme);
-            setTheme(themeValue);
-            setSettingsState(prev => ({ ...prev, theme: themeValue }))
-          }
-        } catch (error) {
-           console.error("Failed to parse theme from localStorage", error);
-        }
-
+      setSettingsState(loadedSettings);
       setIsInitialized(true);
     };
 
     loadSettings();
-  }, [user, setTheme]);
+  }, [user, userLoading, setTheme]);
 
   const setSettings = useCallback(async (newSettings: Partial<Settings>) => {
      setSettingsState(prev => {
@@ -92,7 +103,7 @@ export function useSettings() {
             const { firestore } = getFirebase();
             if(firestore) {
                 const userDocRef = doc(firestore, 'users', user.uid);
-                const settingsToSave = {
+                const settingsToSave: { displayName: string, currency: string } = {
                     displayName: updatedSettings.name,
                     currency: updatedSettings.currency,
                 };
@@ -116,12 +127,19 @@ export function useSettings() {
   }, [user, theme, setTheme]);
 
   const formatCurrency = useCallback((amount: number) => {
+    if (typeof amount !== 'number') {
+        amount = 0;
+    }
     const symbol = currencySymbols[settings.currency] || '$';
-    const formattedAmount = amount.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-    return `${symbol}${formattedAmount}`;
+    try {
+        const formattedAmount = amount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+        return `${symbol}${formattedAmount}`;
+    } catch (e) {
+        return `${symbol}0.00`;
+    }
   }, [settings.currency]);
 
 

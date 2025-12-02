@@ -104,6 +104,7 @@ export default function HomePage() {
   };
 
   const categoryTotals = useMemo(() => {
+    if (!isInitialized) return [];
     const totals = new Map<ExpenseCategory, number>();
     CATEGORIES.forEach(cat => totals.set(cat.name, 0));
     expenses.forEach(expense => {
@@ -116,7 +117,7 @@ export default function HomePage() {
         ...CATEGORIES.find(c => c.name === name),
       }))
       .filter(item => item.total > 0);
-  }, [expenses]);
+  }, [expenses, isInitialized]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
