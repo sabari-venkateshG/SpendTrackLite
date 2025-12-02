@@ -46,35 +46,19 @@ export default function HomePage() {
         const result = await getExpenseDetailsFromImage(dataUri);
         const parsedDate = new Date(result.date);
         
-        const newExpense: Omit<Expense, 'id'> = {
+        const newExpense: Partial<Expense> = {
           amount: parseFloat(result.amount.replace(/[^0-9.-]+/g,"")),
           reason: result.vendor,
           date: isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString(),
           category: result.category as ExpenseCategory,
         };
 
-        if (isNaN(newExpense.amount) || !newExpense.reason || !newExpense.category) {
-          setEditingExpense(newExpense);
-          setIsSheetOpen(true);
-          toast({
-            title: 'Please complete the details',
-            description: `We extracted what we could, but some fields need your attention.`,
-          });
-        } else {
-          addExpense(newExpense);
-          toast({
-            description: (
-              <div className="flex flex-col items-center gap-4">
-                <TickAnimation />
-                <div className="text-center">
-                  <p className="font-bold text-lg">Expense Added!</p>
-                  <p>{newExpense.reason} for {formatCurrency(newExpense.amount)}</p>
-                </div>
-              </div>
-            ),
-            duration: 3000,
-          });
-        }
+        setEditingExpense(newExpense);
+        setIsSheetOpen(true);
+        toast({
+          title: 'Review Extracted Details',
+          description: `We've extracted the details from your receipt. Please review and save.`,
+        });
 
       } catch (error) {
         toast({
@@ -98,7 +82,7 @@ export default function HomePage() {
         description: 'Could not read the selected image file.',
       });
     };
-  }, [addExpense, toast, settings.currency]);
+  }, [toast]);
 
   const handleAddManually = () => {
     setEditingExpense(null);
@@ -207,7 +191,7 @@ export default function HomePage() {
           <SheetHeader>
             <SheetTitle>{editingExpense ? 'Review Expense' : 'Add New Expense'}</SheetTitle>
           </SheetHeader>
-          <ExpenseForm expense={editingExpense} onSave={handleSaveExpense} onFormSubmit={() => setIsSheetOpen(false)} />
+          <ExpenseForm expense={editingExpense} onSave={handleSaveExpense} onCancel={() => setIsSheetOpen(false)} />
         </SheetContent>
       </Sheet>
     </div>

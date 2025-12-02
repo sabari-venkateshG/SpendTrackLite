@@ -41,7 +41,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport />
+      <ToastViewport className={toasts.some(t => t.variant !== 'destructive' && !t.title) ? 'group/viewport data-[success=true]' : ''} />
     </ToastProvider>
   )
 }

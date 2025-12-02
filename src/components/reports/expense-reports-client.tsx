@@ -10,6 +10,8 @@ import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, parseISO, 
 import { useSettings } from '@/hooks/use-settings';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CATEGORIES } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 
 const COLORS = [
@@ -114,6 +116,30 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
     return Object.entries(breakdown).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
   }, [filteredData]);
 
+  const handleExport = () => {
+    const headers = ["Date", "Reason", "Category", "Amount"];
+    const csvContent = [
+      headers.join(','),
+      ...filteredData.map(exp => [
+        format(parseISO(exp.date), 'yyyy-MM-dd'),
+        `"${exp.reason.replace(/"/g, '""')}"`,
+        exp.category,
+        exp.amount
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `expense-report-${timeRange}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -137,7 +163,14 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+        <Button onClick={handleExport} disabled={filteredData.length === 0}>
+          <Download className="mr-2 h-4 w-4" />
+          Export as CSV
+        </Button>
+      </div>
+
       <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
         <TabsList>
           <TabsTrigger value="monthly">This Month</TabsTrigger>

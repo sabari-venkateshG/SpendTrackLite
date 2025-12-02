@@ -28,10 +28,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface ExpenseFormProps {
   expense: Partial<Expense> | null;
   onSave: (expense: Omit<Expense, 'id'>) => void;
-  onFormSubmit: () => void;
+  onCancel: () => void;
 }
 
-export function ExpenseForm({ expense, onSave, onFormSubmit }: ExpenseFormProps) {
+export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,7 +47,6 @@ export function ExpenseForm({ expense, onSave, onFormSubmit }: ExpenseFormProps)
       ...values,
       date: values.date.toISOString(),
     });
-    onFormSubmit();
   };
 
   return (
@@ -142,7 +141,7 @@ export function ExpenseForm({ expense, onSave, onFormSubmit }: ExpenseFormProps)
           )}
         />
         <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onFormSubmit}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
             <Button type="submit">Save Expense</Button>
         </div>
       </form>
