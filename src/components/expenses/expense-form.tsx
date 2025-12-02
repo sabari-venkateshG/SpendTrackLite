@@ -36,7 +36,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: expense?.amount || undefined,
+      amount: expense?.amount || '',
       reason: expense?.reason || '',
       date: expense?.date ? new Date(expense.date) : new Date(),
       category: expense?.category || undefined,
@@ -45,7 +45,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
 
   useEffect(() => {
     form.reset({
-      amount: expense?.amount || undefined,
+      amount: expense?.amount || '',
       reason: expense?.reason || '',
       date: expense?.date ? new Date(expense.date) : new Date(),
       category: expense?.category || undefined,
