@@ -77,10 +77,11 @@ export function useSettings() {
 
   const formatCurrency = useCallback((amount: number) => {
     const symbol = currencySymbols[settings.currency] || '$';
-    const formattedAmount = new Intl.NumberFormat('en-US', {
+    // Use a basic formatter that doesn't rely on locale-specific symbols
+    const formattedAmount = amount.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-    }).format(amount);
+    });
     return `${symbol}${formattedAmount}`;
   }, [settings.currency]);
 
