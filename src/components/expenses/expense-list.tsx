@@ -10,6 +10,7 @@ import { format, parseISO } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useSettings } from '@/hooks/use-settings';
 import { useCallback } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -48,18 +49,18 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
           <Card key={expense.id} className="group transition-all duration-200 ease-in-out hover:shadow-lg hover:border-primary/50">
             <div className="flex items-center p-4">
               {Icon && (
-                <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
-                  <Icon className="h-6 w-6 text-secondary-foreground" />
+                <div className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12">
+                  <Icon className="h-5 w-5 text-secondary-foreground md:h-6 md:w-6" />
                 </div>
               )}
-              <div className="flex-1">
-                <p className="font-bold">{expense.reason}</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold truncate">{expense.reason}</p>
+                <p className="text-sm text-muted-foreground truncate">
                   {format(parseISO(expense.date), 'MMMM d, yyyy')} &bull; {expense.category}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-lg font-bold">
+              <div className="ml-4 flex items-center">
+                <p className="text-md font-bold md:text-lg">
                   {formatCurrency(expense.amount)}
                 </p>
                 <AlertDialog>
@@ -67,7 +68,7 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                      className="ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:opacity-0"
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>

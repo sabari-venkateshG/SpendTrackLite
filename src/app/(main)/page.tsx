@@ -167,14 +167,14 @@ export default function HomePage() {
       )}
       
       {/* Mobile FABs */}
-      <div className="md:hidden fixed bottom-20 right-4 z-10 flex flex-col items-center gap-4">
+      <div className="md:hidden fixed bottom-20 right-4 z-10 flex flex-row items-center gap-3">
         <Button
           className="h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
           aria-label="Add Expense Manually"
           onClick={handleAddManually}
           variant="secondary"
         >
-          <Edit className="h-7 w-7" />
+          <Edit className="h-6 w-6" />
         </Button>
         <Button
           className="h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
