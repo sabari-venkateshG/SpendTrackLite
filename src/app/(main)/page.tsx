@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Plus, Loader2, ScanLine, Edit, MoreVertical } from 'lucide-react';
+import { Plus, Loader2, ScanLine, Edit } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
@@ -121,6 +121,14 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
+       {isProcessing && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-lg font-semibold">Extracting receipt details...</p>
+          <p className="text-sm text-muted-foreground">This may take a few seconds.</p>
+        </div>
+      )}
+
        <input 
         type="file" 
         accept="image/*" 
@@ -162,43 +170,20 @@ export default function HomePage() {
         </div>
       )}
       
-      {/* Mobile FAB */}
-      <div className="md:hidden fixed bottom-20 right-4 z-10">
+      <div className="fixed bottom-20 right-4 z-10 md:bottom-8 md:right-8">
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button
-                    className="h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
+                    className="h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100 md:h-14 md:w-auto md:rounded-md md:px-4 md:py-2 md:text-base"
                     aria-label="Add Expense"
-                    disabled={isProcessing}
                     >
-                    {isProcessing ? <Loader2 className="h-7 w-7 animate-spin" /> : <Plus className="h-8 w-8" />}
+                    <Plus className="h-8 w-8 md:h-5 md:w-5" />
+                    <span className="hidden md:inline md:ml-2">Add Expense</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="end">
-                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
-                    <ScanLine className="mr-2 h-4 w-4" />
-                    <span>Scan Receipt</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleAddManually}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    <span>Add Manually</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Desktop Button */}
-      <div className="hidden md:block fixed bottom-8 right-8">
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button size="lg" className="h-14 gap-2 text-lg transition-transform hover:scale-105">
-                    <Plus className="h-5 w-5"/> 
-                    Add Expense
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="end">
+            <DropdownMenuContent side="top" align="end" className="w-56">
                 <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={isProcessing}>
-                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ScanLine className="mr-2 h-4 w-4" />}
+                    <ScanLine className="mr-2 h-4 w-4" />
                     <span>Scan Receipt</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleAddManually}>
@@ -212,7 +197,7 @@ export default function HomePage() {
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editingExpense ? 'Review Expense' : 'Add New Expense'}</SheetTitle>
+            <SheetTitle>{editingExpense && editingExpense.reason ? 'Review Expense' : 'Add New Expense'}</SheetTitle>
           </SheetHeader>
           <ExpenseForm expense={editingExpense} onSave={handleSaveExpense} onCancel={() => setIsSheetOpen(false)} />
         </SheetContent>
