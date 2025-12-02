@@ -186,7 +186,7 @@ export default function HomePage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-bold truncate">{expense.reason}</p>
                           <p className="text-sm text-muted-foreground truncate">
-                            {format(parseISO(expense.date), 'MMM d, yyyy, h:mm a')} &bull; {expense.category}
+                            {format(parseISO(expense.date), 'MMM d, yyyy, h:mm a')} • {expense.category}
                           </p>
                         </div>
                         <div className="ml-4 flex items-center">
@@ -231,7 +231,7 @@ export default function HomePage() {
                 <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No Expenses Yet</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Click the &quot;+&quot; button to add your first expense.
+                  Click the "+" button to add your first expense.
                 </p>
             </div>
           )}
@@ -284,5 +284,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

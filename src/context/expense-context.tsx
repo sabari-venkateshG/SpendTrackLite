@@ -18,9 +18,10 @@ const getLocalExpenses = (): Expense[] => {
   if (typeof window === 'undefined') return [];
   try {
     const localData = localStorage.getItem('expenses');
-    const parsedExpenses = localData ? JSON.parse(localData) : [];
+    if (!localData) return [];
+    const parsedExpenses = JSON.parse(localData) as Expense[];
     // Sort: Oldest first, newest last
-    parsedExpenses.sort((a: Expense, b: Expense) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    parsedExpenses.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return parsedExpenses;
   } catch (error) {
     console.error("Error reading expenses from localStorage", error);
@@ -95,5 +96,3 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     </ExpenseContext.Provider>
   );
 }
-
-    
