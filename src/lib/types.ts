@@ -1,4 +1,6 @@
-export type ExpenseCategory = 'Food' | 'Transport' | 'Utilities' | 'Entertainment' | 'Health' | 'Shopping' | 'Other';
+import { CATEGORY_NAMES } from './constants';
+
+export type ExpenseCategory = typeof CATEGORY_NAMES[number];
 
 export interface Expense {
   id: string;

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Plus, Loader2, Edit } from 'lucide-react';
+import { Plus, Loader2, ScanLine, Edit, MoreVertical } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,9 @@ import { ExpenseForm } from '@/components/expenses/expense-form';
 import { TickAnimation } from '@/components/tick-animation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
@@ -111,7 +114,7 @@ export default function HomePage() {
       .map(([name, total]) => ({
         name,
         total,
-        icon: CATEGORIES.find(c => c.name === name)?.icon,
+        ...CATEGORIES.find(c => c.name === name),
       }))
       .filter(item => item.total > 0);
   }, [expenses]);
@@ -131,11 +134,11 @@ export default function HomePage() {
         <div className="space-y-8">
           {categoryTotals.length > 0 && (
              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {categoryTotals.map(({ name, total, icon: Icon }) => (
-                <Card key={name} className="transition-all hover:shadow-lg hover:-translate-y-1">
+              {categoryTotals.map(({ name, total, icon: Icon, color }) => (
+                <Card key={name} className={cn("transition-all hover:shadow-lg hover:-translate-y-1 text-white", color)}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{name}</CardTitle>
-                    {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+                    {Icon && <Icon className="h-5 w-5" />}
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{formatCurrency(total)}</div>
@@ -159,35 +162,51 @@ export default function HomePage() {
         </div>
       )}
       
-      {/* Mobile FABs */}
-      <div className="md:hidden fixed bottom-20 right-4 z-10 flex flex-row items-center gap-3">
-        <Button
-          variant="secondary"
-          className="h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
-          aria-label="Add Expense Manually"
-          onClick={handleAddManually}
-        >
-          <Edit className="h-6 w-6" />
-        </Button>
-        <Button
-          className="h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
-          aria-label="Scan Receipt"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isProcessing}
-        >
-          {isProcessing ? <Loader2 className="h-7 w-7 animate-spin" /> : <Plus className="h-8 w-8" />}
-        </Button>
+      {/* Mobile FAB */}
+      <div className="md:hidden fixed bottom-20 right-4 z-10">
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    className="h-16 w-16 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-100"
+                    aria-label="Add Expense"
+                    disabled={isProcessing}
+                    >
+                    {isProcessing ? <Loader2 className="h-7 w-7 animate-spin" /> : <Plus className="h-8 w-8" />}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end">
+                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
+                    <ScanLine className="mr-2 h-4 w-4" />
+                    <span>Scan Receipt</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleAddManually}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Add Manually</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      
+
       {/* Desktop Button */}
-      <div className="hidden md:block fixed bottom-8 right-8 space-x-2">
-         <Button size="lg" className="h-14 gap-2 text-lg transition-transform hover:scale-105" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
-            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5"/>} 
-            Scan Receipt
-        </Button>
-        <Button size="lg" variant="secondary" className="h-14 gap-2 text-lg transition-transform hover:scale-105" onClick={handleAddManually}>
-            Add Manually
-        </Button>
+      <div className="hidden md:block fixed bottom-8 right-8">
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button size="lg" className="h-14 gap-2 text-lg transition-transform hover:scale-105">
+                    <Plus className="h-5 w-5"/> 
+                    Add Expense
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end">
+                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={isProcessing}>
+                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ScanLine className="mr-2 h-4 w-4" />}
+                    <span>Scan Receipt</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleAddManually}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Add Manually</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
