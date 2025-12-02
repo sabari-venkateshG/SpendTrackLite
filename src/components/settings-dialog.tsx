@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSettings } from '@/hooks/use-settings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
-
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -21,18 +19,17 @@ interface SettingsDialogProps {
 const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'INR'];
 
 export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
-  const { settings, setSettings, isInitialized } = useSettings();
-  const { setTheme, theme } = useTheme();
+  const { settings, setSettings, isInitialized, theme, setTheme } = useSettings();
 
-  const [name, setName] = useState(settings.name);
-  const [currency, setCurrency] = useState(settings.currency);
+  const [name, setName] = useState('');
+  const [currency, setCurrency] = useState('');
 
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && isOpen) {
       setName(settings.name);
       setCurrency(settings.currency);
     }
-  }, [settings.name, settings.currency, isInitialized, isOpen]);
+  }, [settings, isInitialized, isOpen]);
 
   const handleSave = () => {
     setSettings({ name, currency });
@@ -52,12 +49,12 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
         </DialogHeader>
         <div className="py-4 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Display Name</Label>
             <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <Select value={currency} onValueChange={setCurrency}>
+            <Select value={currency} onValueChange={(value) => setCurrency(value)}>
               <SelectTrigger id="currency">
                 <SelectValue placeholder="Select a currency" />
               </SelectTrigger>
@@ -68,7 +65,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
           </div>
           <div className="space-y-2">
             <Label>Theme</Label>
-             <Tabs value={theme} onValueChange={setTheme} className="w-full">
+             <Tabs value={theme} onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="light">
                         <Sun className="mr-2 h-4 w-4" /> Light
