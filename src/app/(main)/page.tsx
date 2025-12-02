@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
@@ -12,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ExpenseForm } from '@/components/expenses/expense-form';
+import { TickAnimation } from '@/components/tick-animation';
 
 
 export default function HomePage() {
@@ -43,7 +45,7 @@ export default function HomePage() {
           category: result.category as ExpenseCategory,
         };
 
-        if (isNaN(newExpense.amount) || !newExpense.reason) {
+        if (isNaN(newExpense.amount) || !newExpense.reason || !newExpense.category) {
           setEditingExpense(newExpense);
           setIsSheetOpen(true);
           toast({
@@ -53,8 +55,16 @@ export default function HomePage() {
         } else {
           addExpense(newExpense);
           toast({
-            title: 'Expense Added!',
-            description: `${newExpense.reason} for $${newExpense.amount.toFixed(2)} was saved.`,
+            description: (
+              <div className="flex flex-col items-center gap-4">
+                <TickAnimation />
+                <div className="text-center">
+                  <p className="font-bold text-lg">Expense Added!</p>
+                  <p>{newExpense.reason} for ${newExpense.amount.toFixed(2)}</p>
+                </div>
+              </div>
+            ),
+            duration: 3000,
           });
         }
 
@@ -91,10 +101,18 @@ export default function HomePage() {
     addExpense(expense);
     setIsSheetOpen(false);
     setEditingExpense(null);
-     toast({
-        title: 'Expense Saved!',
-        description: `${expense.reason} for $${expense.amount.toFixed(2)} was saved.`,
-    });
+    toast({
+        description: (
+          <div className="flex flex-col items-center gap-4">
+            <TickAnimation />
+            <div className="text-center">
+                <p className="font-bold text-lg">Expense Saved!</p>
+                <p>{expense.reason} for ${expense.amount.toFixed(2)}</p>
+            </div>
+          </div>
+        ),
+        duration: 3000,
+      });
   };
 
   return (
@@ -147,3 +165,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

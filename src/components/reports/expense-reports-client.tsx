@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -7,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, parseISO, format } from 'date-fns';
 import { useSettings } from '@/hooks/use-settings';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { CATEGORIES } from '@/lib/constants';
 
 
 const COLORS = [
@@ -94,6 +97,23 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
 
   }, [filteredData, timeRange]);
   
+  const categoryMonthlyBreakdown = useMemo(() => {
+    const breakdown: { [month: string]: { [category: string]: number } } = {};
+
+    filteredData.forEach(expense => {
+      const month = format(parseISO(expense.date), 'MMMM yyyy');
+      if (!breakdown[month]) {
+        breakdown[month] = {};
+      }
+      if (!breakdown[month][expense.category]) {
+        breakdown[month][expense.category] = 0;
+      }
+      breakdown[month][expense.category] += expense.amount;
+    });
+
+    return Object.entries(breakdown).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+  }, [filteredData]);
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -201,8 +221,48 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
               </CardContent>
             </Card>
           </div>
+
+          {categoryMonthlyBreakdown.length > 0 && (
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>Monthly Category Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {categoryMonthlyBreakdown.map(([month, categories]) => (
+                  <div key={month} className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2">{month}</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {CATEGORIES.map(category => {
+                          const total = categories[category.name] || 0;
+                          return total > 0 ? (
+                            <TableRow key={category.name}>
+                              <TableCell className="font-medium flex items-center gap-2">
+                                <category.icon className="h-4 w-4 text-muted-foreground" />
+                                {category.name}
+                              </TableCell>
+                              <TableCell className="text-right">{formatCurrency(total)}</TableCell>
+                            </TableRow>
+                          ) : null;
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+    
