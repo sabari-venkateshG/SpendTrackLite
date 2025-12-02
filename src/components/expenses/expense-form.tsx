@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,6 +42,16 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
       category: expense?.category || undefined,
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      amount: expense?.amount || undefined,
+      reason: expense?.reason || '',
+      date: expense?.date ? new Date(expense.date) : new Date(),
+      category: expense?.category || undefined,
+    });
+  }, [expense, form]);
+
 
   const onSubmit = (values: FormValues) => {
     onSave({
