@@ -1,47 +1,105 @@
-"use client";
 
-import type { Expense } from '@/lib/types';
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
-
-const STORAGE_KEY = 'spendtrack-lite-expenses';
+import { collection, addDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getFirebase } from '@/firebase/config';
+import { useUser } from '@/firebase';
+import type { Expense } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export function useExpenses() {
+  const { user } = useUser();
+  const { toast } = useToast();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    if (!user) {
+      setExpenses([]);
+      setIsInitialized(true);
+      return;
+    }
+
+    const { firestore } = getFirebase();
+    if (!firestore) return;
+
+    const expensesColRef = collection(firestore, 'users', user.uid, 'expenses');
+    const q = query(expensesColRef, orderBy('date', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const expensesData: Expense[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Expense));
+      setExpenses(expensesData);
+      setIsInitialized(true);
+    }, (error) => {
+      console.error("Error fetching expenses: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch expenses.",
+      });
+      setIsInitialized(true);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
+
+  const addExpense = useCallback(async (newExpenseData: Omit<Expense, 'id' | 'owner'>) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not signed in",
+        description: "You must be signed in to add an expense.",
+      });
+      return;
+    }
+    const { firestore } = getFirebase();
+    if (!firestore) return;
+
     try {
-      const storedExpenses = localStorage.getItem(STORAGE_KEY);
-      if (storedExpenses) {
-        setExpenses(JSON.parse(storedExpenses));
-      }
+      const expensesColRef = collection(firestore, 'users', user.uid, 'expenses');
+      await addDoc(expensesColRef, {
+        ...newExpenseData,
+        owner: user.uid,
+        createdAt: serverTimestamp(),
+      });
     } catch (error) {
-      console.error("Failed to parse expenses from localStorage", error);
+      console.error("Error adding expense: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not save expense.",
+      });
     }
-    setIsInitialized(true);
-  }, []);
+  }, [user, toast]);
 
-  useEffect(() => {
-    if (isInitialized) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-      } catch (error) {
-        console.error("Failed to save expenses to localStorage", error);
-      }
+  const removeExpense = useCallback(async (id: string) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not signed in",
+        description: "You must be signed in to remove an expense.",
+      });
+      return;
     }
-  }, [expenses, isInitialized]);
+    const { firestore } = getFirebase();
+    if (!firestore) return;
 
-  const addExpense = useCallback((newExpenseData: Omit<Expense, 'id'>) => {
-    const newExpense: Expense = {
-      ...newExpenseData,
-      id: crypto.randomUUID(),
-    };
-    setExpenses(prevExpenses => [newExpense, ...prevExpenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  }, []);
-
-  const removeExpense = useCallback((id: string) => {
-    setExpenses(prevExpenses => prevExpenses.filter(expense => expense.id !== id));
-  }, []);
+    try {
+      const expenseDocRef = doc(firestore, 'users', user.uid, 'expenses', id);
+      await deleteDoc(expenseDocRef);
+    } catch (error) {
+      console.error("Error removing expense: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not remove expense.",
+      });
+    }
+  }, [user, toast]);
 
   return { expenses, addExpense, removeExpense, isInitialized };
 }

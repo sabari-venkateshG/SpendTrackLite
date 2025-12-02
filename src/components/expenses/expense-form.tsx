@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -26,8 +27,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface ExpenseFormProps {
-  expense: Partial<Expense> | null;
-  onSave: (expense: Omit<Expense, 'id'>) => void;
+  expense: Partial<Omit<Expense, 'id' | 'owner'>> | null;
+  onSave: (expense: Omit<Expense, 'id' | 'owner'>) => void;
   onCancel: () => void;
 }
 
@@ -35,7 +36,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: expense?.amount || 0,
+      amount: expense?.amount || undefined,
       reason: expense?.reason || '',
       date: expense?.date ? new Date(expense.date) : new Date(),
       category: expense?.category || undefined,

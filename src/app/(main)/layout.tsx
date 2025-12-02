@@ -17,19 +17,33 @@ import { useUser } from '@/firebase';
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signOut,
 } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirebase } from '@/firebase/config';
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
 
   const handleSignIn = async () => {
-    const { auth } = getFirebase();
-    if (!auth) return;
+    const { auth, firestore } = getFirebase();
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const loggedInUser = result.user;
+      
+      // Check if user document exists, if not, create it
+      const userDocRef = doc(firestore, "users", loggedInUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          displayName: loggedInUser.displayName,
+          email: loggedInUser.email,
+          photoURL: loggedInUser.photoURL,
+        });
+      }
+
     } catch (error) {
       console.error('Error signing in with Google', error);
     }

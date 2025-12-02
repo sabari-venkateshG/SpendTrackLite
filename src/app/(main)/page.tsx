@@ -17,7 +17,6 @@ import { TickAnimation } from '@/components/tick-animation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 
 
 export default function HomePage() {
@@ -26,7 +25,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<Partial<Expense> | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Partial<Omit<Expense, 'id' | 'owner'>> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +42,7 @@ export default function HomePage() {
         const result = await getExpenseDetailsFromImage(dataUri);
         const parsedDate = new Date(result.date);
         
-        const newExpense: Partial<Expense> = {
+        const newExpense: Partial<Omit<Expense, 'id' | 'owner'>> = {
           amount: parseFloat(result.amount.replace(/[^0-9.-]+/g,"")),
           reason: result.vendor,
           date: isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString(),
@@ -86,7 +85,7 @@ export default function HomePage() {
     setIsSheetOpen(true);
   };
   
-  const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
+  const handleSaveExpense = (expense: Omit<Expense, 'id' | 'owner'>) => {
     addExpense(expense);
     setIsSheetOpen(false);
     setEditingExpense(null);
