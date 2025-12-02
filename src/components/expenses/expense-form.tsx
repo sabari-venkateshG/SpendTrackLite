@@ -94,7 +94,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
+              <FormLabel>Date & Time</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -105,7 +105,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
                         !field.value && 'text-muted-foreground'
                       )}
                     >
-                      {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                      {field.value ? format(field.value, 'PPP p') : <span>Pick a date</span>}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
@@ -115,9 +115,22 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                    disabled={(date) => date > new Date()}
                     initialFocus
                   />
+                   <div className="p-3 border-t border-border">
+                    <Input
+                        type="time"
+                        value={format(field.value || new Date(), 'HH:mm')}
+                        onChange={(e) => {
+                            const [hours, minutes] = e.target.value.split(':');
+                            const newDate = new Date(field.value || new Date());
+                            newDate.setHours(parseInt(hours, 10));
+                            newDate.setMinutes(parseInt(minutes, 10));
+                            field.onChange(newDate);
+                        }}
+                    />
+                  </div>
                 </PopoverContent>
               </Popover>
               <FormMessage />

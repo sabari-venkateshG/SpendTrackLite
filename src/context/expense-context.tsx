@@ -23,8 +23,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     try {
       const localData = localStorage.getItem('expenses');
       const parsedExpenses = localData ? JSON.parse(localData) : [];
-      // Ensure sorting is always applied when reading data
-      parsedExpenses.sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Sort: Oldest first, newest last
+      parsedExpenses.sort((a: Expense, b: Expense) => new Date(a.date).getTime() - new Date(b.date).getTime());
       return parsedExpenses;
     } catch (error) {
       console.error("Error reading expenses from localStorage", error);
@@ -70,8 +70,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     };
     
     setExpenses(prevExpenses => {
-      const updatedExpenses = [newExpense, ...prevExpenses];
-      updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const updatedExpenses = [...prevExpenses, newExpense];
+      // Sort: Oldest first, newest last
+      updatedExpenses.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       saveLocalExpenses(updatedExpenses);
       return updatedExpenses;
     });

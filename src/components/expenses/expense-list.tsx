@@ -49,7 +49,7 @@ export function ExpenseList({ expenses, removeExpense }: ExpenseListProps) {
               <div className="flex-1 min-w-0">
                 <p className="font-bold truncate">{expense.reason}</p>
                 <p className="text-sm text-muted-foreground truncate">
-                  {format(parseISO(expense.date), 'MMMM d, yyyy')} &bull; {expense.category}
+                  {format(parseISO(expense.date), 'MMM d, yyyy, h:mm a')} &bull; {expense.category}
                 </p>
               </div>
               <div className="ml-4 flex items-center">
