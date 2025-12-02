@@ -3,17 +3,17 @@ import { Car, HeartPulse, Home, MoreHorizontal, ShoppingBag, Ticket, UtensilsCro
 import type { LucideIcon } from 'lucide-react';
 
 export const CATEGORIES: { name: ExpenseCategory; icon: LucideIcon; color: string }[] = [
-  { name: 'Food', icon: UtensilsCrossed, color: 'bg-red-500' },
-  { name: 'Transport', icon: Car, color: 'bg-blue-500' },
-  { name: 'Utilities', icon: Home, color: 'bg-yellow-500' },
-  { name: 'Entertainment', icon: Film, color: 'bg-purple-500' },
-  { name: 'Health', icon: HeartPulse, color: 'bg-green-500' },
-  { name: 'Shopping', icon: ShoppingBag, color: 'bg-pink-500' },
-  { name: 'Travel', icon: Plane, color: 'bg-indigo-500' },
-  { name: 'Education', icon: GraduationCap, color: 'bg-teal-500' },
-  { name: 'Gifts', icon: Gift, color: 'bg-orange-500' },
-  { name: 'Fuel', icon: Fuel, color: 'bg-gray-500' },
-  { name: 'Other', icon: MoreHorizontal, color: 'bg-slate-400' },
+  { name: 'Food', icon: UtensilsCrossed, color: 'food' },
+  { name: 'Transport', icon: Car, color: 'transport' },
+  { name: 'Utilities', icon: Home, color: 'utilities' },
+  { name: 'Entertainment', icon: Film, color: 'entertainment' },
+  { name: 'Health', icon: HeartPulse, color: 'health' },
+  { name: 'Shopping', icon: ShoppingBag, color: 'shopping' },
+  { name: 'Travel', icon: Plane, color: 'travel' },
+  { name: 'Education', icon: GraduationCap, color: 'education' },
+  { name: 'Gifts', icon: Gift, color: 'gifts' },
+  { name: 'Fuel', icon: Fuel, color: 'fuel' },
+  { name: 'Other', icon: MoreHorizontal, color: 'other' },
 ];
 
 export const CATEGORY_NAMES = [
@@ -29,4 +29,3 @@ export const CATEGORY_NAMES = [
     'Fuel',
     'Other'
 ] as const;
-
