@@ -13,55 +13,56 @@ interface ExpenseContextType {
 
 export const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 
+// Helper function to get sorted expenses from localStorage
+const getLocalExpenses = (): Expense[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const localData = localStorage.getItem('expenses');
+    const parsedExpenses = localData ? JSON.parse(localData) : [];
+    // Sort: Oldest first, newest last
+    parsedExpenses.sort((a: Expense, b: Expense) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return parsedExpenses;
+  } catch (error) {
+    console.error("Error reading expenses from localStorage", error);
+    return [];
+  }
+};
+
+// Helper function to save expenses to localStorage
+const saveLocalExpenses = (expensesToSave: Expense[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('expenses', JSON.stringify(expensesToSave));
+  } catch (error) {
+    console.error("Error saving expenses to localStorage", error);
+  }
+};
+
 export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Function to get from localStorage
-  const getLocalExpenses = useCallback((): Expense[] => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const localData = localStorage.getItem('expenses');
-      const parsedExpenses = localData ? JSON.parse(localData) : [];
-      // Sort: Oldest first, newest last
-      parsedExpenses.sort((a: Expense, b: Expense) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      return parsedExpenses;
-    } catch (error) {
-      console.error("Error reading expenses from localStorage", error);
-      return [];
-    }
-  }, []);
-
   // Effect for initial load and cross-tab sync
   useEffect(() => {
-    // Initial load
+    // On initial mount, load data from localStorage
     setExpenses(getLocalExpenses());
     setIsInitialized(true);
 
-    // Listen for changes from other tabs
+    // Set up a listener for storage events to sync across tabs
     const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === 'expenses') {
-            setExpenses(getLocalExpenses());
-        }
+      if (e.key === 'expenses') {
+        setExpenses(getLocalExpenses());
+      }
     };
     
     window.addEventListener('storage', handleStorageChange);
     
+    // Clean up the listener when the component unmounts
     return () => {
-        window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', handleStorageChange);
     };
-  }, [getLocalExpenses]);
+  }, []);
   
-  // Function to save to localStorage
-  const saveLocalExpenses = (expensesToSave: Expense[]) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem('expenses', JSON.stringify(expensesToSave));
-    } catch (error) {
-      console.error("Error saving expenses to localStorage", error);
-    }
-  };
-
   const addExpense = useCallback((newExpenseData: Omit<Expense, 'id' | 'owner'>) => {
     const newExpense: Expense = {
       ...newExpenseData,
@@ -94,3 +95,5 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     </ExpenseContext.Provider>
   );
 }
+
+    
