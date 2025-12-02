@@ -31,6 +31,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const saveLocalExpenses = useCallback((expensesToSave: Expense[]) => {
     try {
       localStorage.setItem('expenses', JSON.stringify(expensesToSave));
+      // Manually dispatch a storage event to sync across tabs/windows
+      window.dispatchEvent(new StorageEvent('storage', { key: 'expenses' }));
     } catch (error) {
       console.error("Error saving expenses to localStorage", error);
     }
@@ -68,8 +70,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       const updatedExpenses = [newExpense, ...prevExpenses];
       updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       saveLocalExpenses(updatedExpenses);
-       // Manually dispatch a storage event to sync across tabs/windows
-       window.dispatchEvent(new StorageEvent('storage', { key: 'expenses' }));
       return updatedExpenses;
     });
   }, [saveLocalExpenses]);
@@ -78,8 +78,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setExpenses(prevExpenses => {
       const updatedExpenses = prevExpenses.filter(exp => exp.id !== id);
       saveLocalExpenses(updatedExpenses);
-      // Manually dispatch a storage event to sync across tabs/windows
-      window.dispatchEvent(new StorageEvent('storage', { key: 'expenses' }));
       return updatedExpenses;
     });
   }, [saveLocalExpenses]);
