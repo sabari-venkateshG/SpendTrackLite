@@ -43,8 +43,12 @@ export default function HomePage() {
         const result = await getExpenseDetailsFromImage(dataUri);
         const parsedDate = new Date(result.date);
         
+        // Remove commas before parsing to handle large numbers correctly
+        const amountString = result.amount.replace(/,/g, '');
+        const parsedAmount = parseFloat(amountString.replace(/[^0-9.-]+/g,""));
+        
         const newExpense: Partial<Omit<Expense, 'id' | 'owner'>> = {
-          amount: parseFloat(result.amount.replace(/[^0-9.-]+/g,"")),
+          amount: isNaN(parsedAmount) ? 0 : parsedAmount,
           reason: result.vendor,
           date: isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString(),
           category: result.category as ExpenseCategory,
@@ -120,7 +124,7 @@ export default function HomePage() {
       .filter(item => item.total > 0);
   }, [expenses, isInitialized]);
   
-  const sortedExpenses = useMemo(() => [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [expenses]);
+  const sortedExpenses = useMemo(() => [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [expenses]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -170,10 +174,10 @@ export default function HomePage() {
               ))}
             </div>
           )}
-          {expenses.length > 0 ? (
+          {sortedExpenses.length > 0 ? (
             <ScrollArea className="h-[calc(100vh-450px)]">
               <div className="space-y-4 pr-4">
-                {[...expenses].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(expense => {
+                {sortedExpenses.map(expense => {
                   const category = CATEGORIES.find(c => c.name === expense.category);
                   const Icon = category?.icon;
 
@@ -286,3 +290,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
