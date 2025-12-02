@@ -143,23 +143,25 @@ export default function HomePage() {
           {categoryTotals.length > 0 && (
              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {categoryTotals.map(({ name, total, icon: Icon, color }) => (
-                <Card 
-                  key={name} 
-                  className={cn("transition-shadow hover:shadow-lg")}
+                <Card
+                  key={name}
+                  className="group transition-shadow hover:shadow-lg"
                   style={{
                     // @ts-ignore
                     '--cat-color': `hsl(var(--cat-${color}))`,
                     '--cat-color-foreground': `hsl(var(--cat-${color}-foreground))`,
                   }}
                 >
-                  <div className="bg-[--cat-color] text-[--cat-color-foreground] rounded-lg p-1 transition-colors duration-300 hover:bg-opacity-90">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">{name}</CardTitle>
-                      {Icon && <Icon className="h-5 w-5" />}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{formatCurrency(total)}</div>
-                    </CardContent>
+                  <div className="p-1">
+                    <div className="rounded-lg p-5 transition-colors duration-300 group-hover:bg-[--cat-color] group-hover:text-[--cat-color-foreground]">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
+                        <CardTitle className="text-sm font-medium">{name}</CardTitle>
+                        {Icon && <Icon className="h-5 w-5 text-muted-foreground group-hover:text-[--cat-color-foreground]" />}
+                      </CardHeader>
+                      <CardContent className="p-0 pt-2">
+                        <div className="text-2xl font-bold">{formatCurrency(total)}</div>
+                      </CardContent>
+                    </div>
                   </div>
                 </Card>
               ))}
