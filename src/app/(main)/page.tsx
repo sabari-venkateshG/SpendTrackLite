@@ -72,10 +72,10 @@ export default function HomePage() {
   }, [filteredExpenses]);
 
   useEffect(() => {
-    if (!carouselApi) {
+    if (!carouselApi || categoryTotals.length === 0) {
       return;
     }
-    
+  
     const onSelect = (api: CarouselApi) => {
       setActiveSlide(api.selectedScrollSnap());
     };
@@ -83,13 +83,11 @@ export default function HomePage() {
     carouselApi.on('select', onSelect);
     carouselApi.on('reInit', onSelect);
   
-    // Set the initial slide
-    if (categoryTotals.length > 0) {
-      const middleIndex = Math.floor(categoryTotals.length / 2);
-      carouselApi.scrollTo(middleIndex, true); // true for instant
-      setActiveSlide(middleIndex);
-    }
-    
+    // Calculate and set the middle slide
+    const middleIndex = Math.floor(categoryTotals.length / 2);
+    carouselApi.scrollTo(middleIndex, true); // true for instant
+    setActiveSlide(middleIndex);
+  
     return () => {
       carouselApi.off('select', onSelect);
       carouselApi.off('reInit', onSelect);
@@ -256,7 +254,7 @@ export default function HomePage() {
                   className="cursor-pointer transition-all animate-pulse-slow hover:animate-none flex items-center justify-between p-6 group h-full"
                 >
                   <div>
-                    <CardTitle className="text-lg font-medium">{activeSummary.title}</CardTitle>
+                    <CardTitle className="text-xl font-medium">{activeSummary.title}</CardTitle>
                     <p className="text-5xl font-bold">{formatCurrency(activeSummary.value)}</p>
                   </div>
                   <ArrowRight className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-1" />
@@ -266,7 +264,7 @@ export default function HomePage() {
               <div className="grid grid-rows-2 gap-4 md:col-span-1">
                  <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">This Month</CardTitle>
+                        <CardTitle className="text-xl font-medium">This Month</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-4xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
@@ -274,7 +272,7 @@ export default function HomePage() {
                 </Card>
                  <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">Transactions</CardTitle>
+                        <CardTitle className="text-xl font-medium">Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-4xl font-bold">{summaryStats.transactions}</p>
@@ -330,27 +328,27 @@ export default function HomePage() {
 
           {filteredExpenses.length > 0 ? (
             <div className="w-full">
-              <ScrollArea className="h-[calc(100vh-560px)] md:h-[calc(100vh-480px)]">
-                <div className="space-y-4 px-2">
+              <ScrollArea className="h-[calc(100vh-620px)] md:h-[calc(100vh-480px)]">
+                <div className="space-y-4 px-1">
                   {filteredExpenses.map(expense => {
                     const category = CATEGORIES.find(c => c.name === expense.category);
                     const Icon = category?.icon;
 
                     return (
-                      <Card key={expense.id} className="group transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:scale-[1.02]">
-                        <div className="flex items-center p-4">
+                      <Card key={expense.id} className="group transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:scale-105">
+                        <div className="flex items-center p-3 md:p-4">
                           {Icon && (
-                            <div className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12">
+                            <div className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12 md:mr-4">
                               <Icon className="h-5 w-5 text-secondary-foreground md:h-6 md:w-6" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="font-bold truncate">{expense.reason}</p>
                             <p className="text-sm text-muted-foreground truncate">
-                              {format(parseISO(expense.date), 'MMM d, yyyy, h:mm a')} • {expense.category}
+                              {format(parseISO(expense.date), 'MMM d, h:mm a')} • {expense.category}
                             </p>
                           </div>
-                          <div className="ml-4 flex items-center">
+                          <div className="ml-2 md:ml-4 flex items-center">
                             <p className="text-md font-bold text-right md:text-lg">
                               {formatCurrency(expense.amount)}
                             </p>
@@ -359,7 +357,7 @@ export default function HomePage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                  className="ml-1 md:ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-100 md:opacity-0 transition-opacity group-hover:opacity-100"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                   <span className="sr-only">Delete</span>
@@ -479,4 +477,5 @@ export default function HomePage() {
       </Sheet>
     </div>
   );
-}
+
+    
