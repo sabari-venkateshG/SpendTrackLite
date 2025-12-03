@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Plus, Loader2, ScanLine, Edit, Trash2, ShoppingBag } from 'lucide-react';
+import { Plus, Loader2, ScanLine, Edit, Trash2 } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
@@ -43,26 +43,10 @@ export default function HomePage() {
       try {
         const result = await getExpenseDetailsFromImage(dataUri);
         
-        let parsedDate;
-        try {
-          // Attempt to parse the date string from AI. This may fail if format is unexpected.
-          parsedDate = new Date(result.date);
-          if (isNaN(parsedDate.getTime())) {
-            // If parsing fails, default to now.
-            parsedDate = new Date();
-          }
-        } catch (e) {
-          parsedDate = new Date();
-        }
-        
-        // Remove commas before parsing to handle large numbers correctly
-        const amountString = result.amount.replace(/,/g, '');
-        const parsedAmount = parseFloat(amountString.replace(/[^0-9.-]+/g,""));
-        
         const newExpense: Partial<Omit<Expense, 'id' | 'owner'>> = {
-          amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+          amount: parseFloat(result.amount.replace(/,/g, '')),
           reason: result.vendor,
-          date: parsedDate.toISOString(),
+          date: new Date().toISOString(),
           category: result.category as ExpenseCategory,
         };
 
@@ -117,24 +101,11 @@ export default function HomePage() {
         duration: 3000,
       });
   };
-
-  const categoryTotals = useMemo(() => {
-    if (!isInitialized) return [];
-    const totals = new Map<ExpenseCategory, number>();
-    CATEGORIES.forEach(cat => totals.set(cat.name, 0));
-    expenses.forEach(expense => {
-      totals.set(expense.category, (totals.get(expense.category) || 0) + expense.amount);
-    });
-    return Array.from(totals.entries())
-      .map(([name, total]) => ({
-        name,
-        total,
-        ...CATEGORIES.find(c => c.name === name),
-      }))
-      .filter(item => item.total > 0);
-  }, [expenses, isInitialized]);
   
-  const sortedExpenses = useMemo(() => [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [expenses]);
+  const sortedExpenses = useMemo(() => {
+    if (!isInitialized) return [];
+    return [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [expenses, isInitialized]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -157,35 +128,8 @@ export default function HomePage() {
 
       {isInitialized ? (
         <div className="space-y-8">
-          {categoryTotals.length > 0 && (
-             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {categoryTotals.map(({ name, total, icon: Icon, color }) => (
-                <Card
-                  key={name}
-                  className="group transition-shadow hover:shadow-lg"
-                  style={{
-                    // @ts-ignore
-                    '--cat-color': `hsl(var(--cat-${color}))`,
-                    '--cat-color-foreground': `hsl(var(--cat-${color}-foreground))`,
-                  }}
-                >
-                  <div className="p-1">
-                    <div className="rounded-lg p-5 transition-colors duration-300 group-hover:bg-[--cat-color] group-hover:text-[--cat-color-foreground]">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
-                        <CardTitle className="text-sm font-medium">{name}</CardTitle>
-                        {Icon && <Icon className="h-5 w-5 text-muted-foreground group-hover:text-[--cat-color-foreground]" />}
-                      </CardHeader>
-                      <CardContent className="p-0 pt-2">
-                        <div className="text-2xl font-bold">{formatCurrency(total)}</div>
-                      </CardContent>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
           {sortedExpenses.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-350px)]">
+            <ScrollArea className="h-[calc(100vh-250px)]">
               <div className="space-y-4 pr-4">
                 {sortedExpenses.map(expense => {
                   const category = CATEGORIES.find(c => c.name === expense.category);
@@ -254,11 +198,7 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
+          <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
@@ -300,3 +240,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
