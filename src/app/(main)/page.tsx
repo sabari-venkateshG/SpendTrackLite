@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Plus, Loader2, ScanLine, Edit, Trash2 } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
@@ -9,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getExpenseDetailsFromImage } from '@/app/actions';
 import type { ExpenseCategory, Expense } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { ExpenseForm, ExpenseFormSuccess } from '@/components/expenses/expense-form';
 import { Card } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
@@ -18,8 +19,6 @@ import { format, parseISO } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { EmptyBoxLottie } from '@/components/lottie/empty-box-lottie';
-import { NotificationBellLottie } from '@/components/lottie/notification-bell-lottie';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
@@ -29,8 +28,7 @@ export default function HomePage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Partial<Omit<Expense, 'id' | 'owner'>> | null>(null);
   const [lastSavedExpense, setLastSavedExpense] = useState<Omit<Expense, 'id' | 'owner'> | null>(null);
-  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
-
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +36,10 @@ export default function HomePage() {
     if (!file) return;
 
     setIsProcessing(true);
+    setIsSheetOpen(true);
+    setEditingExpense(null);
+    setLastSavedExpense(null);
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async () => {
@@ -53,8 +55,11 @@ export default function HomePage() {
         };
 
         setEditingExpense(newExpense);
-        setShowReviewPrompt(true);
-        setIsSheetOpen(true);
+        toast({
+            title: "Review Extracted Details",
+            description: "Check the details from your receipt and save.",
+            duration: 5000,
+        });
 
       } catch (error) {
         toast({
@@ -63,8 +68,6 @@ export default function HomePage() {
           description: error instanceof Error ? error.message : "An unknown error occurred. Please enter manually.",
         });
         setEditingExpense({});
-        setShowReviewPrompt(false);
-        setIsSheetOpen(true);
       } finally {
         setIsProcessing(false);
         // Reset file input
@@ -83,7 +86,7 @@ export default function HomePage() {
 
   const handleAddManually = () => {
     setEditingExpense(null);
-    setShowReviewPrompt(false);
+    setLastSavedExpense(null);
     setIsSheetOpen(true);
   };
   
@@ -91,7 +94,6 @@ export default function HomePage() {
     addExpense(expense);
     setLastSavedExpense(expense);
     setEditingExpense(null);
-    setShowReviewPrompt(false);
   };
 
   const handleSheetClose = (open: boolean) => {
@@ -100,7 +102,6 @@ export default function HomePage() {
         setTimeout(() => {
             setLastSavedExpense(null);
             setEditingExpense(null);
-            setShowReviewPrompt(false);
         }, 300);
     }
     setIsSheetOpen(open);
@@ -108,7 +109,7 @@ export default function HomePage() {
   
   const sortedExpenses = useMemo(() => {
     if (!isInitialized) return [];
-    return [...expenses].sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+    return [...expenses].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
   }, [expenses, isInitialized]);
 
   return (
@@ -242,16 +243,6 @@ export default function HomePage() {
                     <SheetHeader>
                         <SheetTitle>{editingExpense ? 'Review Expense' : 'Add New Expense'}</SheetTitle>
                     </SheetHeader>
-                     {showReviewPrompt && (
-                        <Alert className="mt-4 bg-accent border-accent-foreground/20">
-                            <div className="flex items-center gap-2">
-                                <NotificationBellLottie />
-                                <AlertDescription>
-                                    Review the extracted details from your receipt and save.
-                                </AlertDescription>
-                            </div>
-                        </Alert>
-                    )}
                     <ExpenseForm 
                         expense={editingExpense} 
                         onSave={handleSaveExpense} 
