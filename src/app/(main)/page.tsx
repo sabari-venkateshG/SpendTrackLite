@@ -276,7 +276,7 @@ export default function HomePage() {
               <h2 className="text-lg font-semibold mb-4 text-center">Spending by Category</h2>
                 <Carousel 
                     setApi={setCarouselApi}
-                    opts={{ align: 'center', loop: categoryTotals.length > 2, startIndex: 1 }} 
+                    opts={{ align: 'center', loop: categoryTotals.length > 2 }} 
                     className="w-full"
                 >
                   <CarouselContent className="-ml-4">
@@ -285,7 +285,7 @@ export default function HomePage() {
                       const isActive = index === activeSlide;
                       return (
                         <CarouselItem key={index} className="basis-1/2 md:basis-1/3 pl-4">
-                          <div className="perspective-1000">
+                          <div className="perspective-1000" onClick={() => carouselApi?.scrollTo(index)}>
                              <Card 
                               className={cn(
                                 "w-full transition-all duration-500 ease-in-out transform-style-3d",
@@ -467,5 +467,8 @@ export default function HomePage() {
       </Sheet>
     </div>
   );
+
+    
+
 
     
