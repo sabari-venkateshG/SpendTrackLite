@@ -8,8 +8,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 5000 // Set a reasonable remove delay
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -92,6 +92,12 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
+
+      // Can't dismiss what doesn't exist
+      const toastExists = state.toasts.find((t) => t.id === toastId)
+      if (!toastExists && toastId) {
+        return state
+      }
 
       if (toastId) {
         addToRemoveQueue(toastId)

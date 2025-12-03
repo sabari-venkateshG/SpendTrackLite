@@ -16,6 +16,9 @@ import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_NAMES } from '@/lib/constants';
 import type { Expense } from '@/lib/types';
 import { CalendarIcon } from 'lucide-react';
+import { SuccessCheckmarkLottie } from '../lottie/success-checkmark-lottie';
+import { useSettings } from '@/hooks/use-settings';
+import { Card, CardContent } from '../ui/card';
 
 const formSchema = z.object({
   amount: z.coerce.number({invalid_type_error: 'Please enter a valid amount.'}).min(0.01, 'Amount must be greater than $0.00.'),
@@ -63,7 +66,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
         <FormField
           control={form.control}
           name="amount"
@@ -117,7 +120,9 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
                     selected={field.value}
                     onSelect={(date) => {
                       if (date) {
-                        field.onChange(date);
+                        const newDate = new Date(field.value || new Date());
+                        newDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+                        field.onChange(newDate);
                         setIsCalendarOpen(false);
                       }
                     }}
@@ -179,4 +184,47 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
   );
 }
 
-    
+
+interface ExpenseFormSuccessProps {
+    expense: Omit<Expense, 'id' | 'owner'>;
+    onDone: () => void;
+}
+
+export function ExpenseFormSuccess({ expense, onDone }: ExpenseFormSuccessProps) {
+    const { formatCurrency } = useSettings();
+    const category = CATEGORIES.find(c => c.name === expense.category);
+    const Icon = category?.icon;
+
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <SuccessCheckmarkLottie />
+            <h2 className="text-2xl font-bold mt-4">Expense Saved!</h2>
+            <p className="text-muted-foreground mb-6">Your expense has been recorded.</p>
+            
+            <Card className="w-full text-left">
+                <CardContent className="p-4">
+                    <div className="flex items-center">
+                        {Icon && (
+                            <div className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
+                                <Icon className="h-5 w-5 text-secondary-foreground" />
+                            </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold truncate">{expense.reason}</p>
+                            <p className="text-sm text-muted-foreground truncate">
+                                {expense.category}
+                            </p>
+                        </div>
+                         <p className="text-lg font-bold ml-4">
+                            {formatCurrency(expense.amount)}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Button onClick={onDone} className="mt-8 w-full">
+                Done
+            </Button>
+        </div>
+    );
+}
