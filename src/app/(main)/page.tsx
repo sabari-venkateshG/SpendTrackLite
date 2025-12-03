@@ -154,7 +154,7 @@ export default function HomePage() {
   }, [filteredExpenses]);
 
   useEffect(() => {
-    if (!carouselApi || categoryTotals.length === 0) {
+    if (!carouselApi) {
       return;
     }
   
@@ -165,16 +165,17 @@ export default function HomePage() {
     carouselApi.on('select', onSelect);
     carouselApi.on('reInit', onSelect);
   
-    // Calculate and set the middle slide
-    const middleIndex = Math.floor(categoryTotals.length / 2);
-    carouselApi.scrollTo(middleIndex, true); // true for instant
-    setActiveSlide(middleIndex);
+    if (categoryTotals.length > 0) {
+        const middleIndex = Math.floor(categoryTotals.length / 2);
+        carouselApi.scrollTo(middleIndex, true); 
+        setActiveSlide(middleIndex);
+    }
   
     return () => {
       carouselApi.off('select', onSelect);
       carouselApi.off('reInit', onSelect);
     };
-  }, [carouselApi, categoryTotals.length]);
+  }, [carouselApi, categoryTotals]);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -509,7 +510,4 @@ export default function HomePage() {
       </Sheet>
     </div>
   );
-
-    
-
-    
+}
