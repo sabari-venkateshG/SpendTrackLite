@@ -214,9 +214,9 @@ export default function HomePage() {
                     return(
                     <CarouselItem key={index} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
                       <div className="p-1">
-                      <Card className="w-full flex-shrink-0 transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
+                      <Card className="w-full flex-shrink-0 transition-all duration-300 ease-in-out hover:bg-accent hover:shadow-xl hover:-translate-y-1">
                          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
+                          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-secondary group-hover:bg-background transition-colors">
                             <Icon className="h-6 w-6 text-secondary-foreground" />
                           </div>
                           <p className="text-sm font-semibold truncate">{category.name}</p>
