@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_NAMES } from '@/lib/constants';
 import type { Expense } from '@/lib/types';
 import { CalendarIcon } from 'lucide-react';
-import { SuccessCheckmarkLottie } from '../lottie/success-checkmark-lottie';
 import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent } from '../ui/card';
 
@@ -197,7 +196,11 @@ export function ExpenseFormSuccess({ expense, onDone }: ExpenseFormSuccessProps)
 
     return (
         <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <SuccessCheckmarkLottie />
+            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-16 h-16 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <h2 className="text-2xl font-bold mt-4">Expense Saved!</h2>
             <p className="text-muted-foreground mb-6">Your expense has been recorded.</p>
             
@@ -228,3 +231,5 @@ export function ExpenseFormSuccess({ expense, onDone }: ExpenseFormSuccessProps)
         </div>
     );
 }
+
+    

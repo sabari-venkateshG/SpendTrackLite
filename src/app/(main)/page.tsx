@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { Plus, Loader2, ScanLine, Edit, Trash2 } from 'lucide-react';
+import { Plus, Loader2, ScanLine, Edit, Trash2, ShoppingBag } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { format, parseISO } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { EmptyBoxLottie } from '@/components/lottie/empty-box-lottie';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
@@ -36,9 +35,11 @@ export default function HomePage() {
     if (!file) return;
 
     setIsProcessing(true);
-    setIsSheetOpen(true);
     setEditingExpense(null);
     setLastSavedExpense(null);
+    
+    // Open the sheet immediately, but don't show the form yet
+    setIsSheetOpen(true);
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -67,6 +68,7 @@ export default function HomePage() {
           title: 'Extraction Failed',
           description: error instanceof Error ? error.message : "An unknown error occurred. Please enter manually.",
         });
+        // Set to empty object to show manual entry form
         setEditingExpense({});
       } finally {
         setIsProcessing(false);
@@ -85,7 +87,7 @@ export default function HomePage() {
   }, [toast]);
 
   const handleAddManually = () => {
-    setEditingExpense(null);
+    setEditingExpense({});
     setLastSavedExpense(null);
     setIsSheetOpen(true);
   };
@@ -94,6 +96,12 @@ export default function HomePage() {
     addExpense(expense);
     setLastSavedExpense(expense);
     setEditingExpense(null);
+    toast({
+        title: "Expense Saved!",
+        description: "Your expense has been successfully recorded.",
+        duration: 3000,
+    });
+    setIsSheetOpen(false);
   };
 
   const handleSheetClose = (open: boolean) => {
@@ -114,7 +122,7 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
-       {isProcessing && (
+       {(isProcessing && !isSheetOpen) && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="mt-4 text-lg font-semibold">Extracting receipt details...</p>
@@ -134,7 +142,7 @@ export default function HomePage() {
       {isInitialized ? (
         <div className="space-y-8">
           {sortedExpenses.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-250px)]">
+            <ScrollArea className="h-[calc(100vh-250px)] md:h-[calc(100vh-200px)]">
               <div className="space-y-4 pr-4">
                 {sortedExpenses.map(expense => {
                   const category = CATEGORIES.find(c => c.name === expense.category);
@@ -193,7 +201,7 @@ export default function HomePage() {
             </ScrollArea>
           ) : (
              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card p-12 text-center shadow-sm min-h-[400px]">
-                <EmptyBoxLottie />
+                <ShoppingBag className="h-16 w-16 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No Expenses Yet</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Click the "+" button to add your first expense.
@@ -236,8 +244,11 @@ export default function HomePage() {
 
       <Sheet open={isSheetOpen} onOpenChange={handleSheetClose}>
         <SheetContent>
-            {lastSavedExpense ? (
-                <ExpenseFormSuccess expense={lastSavedExpense} onDone={() => handleSheetClose(false)} />
+            {isProcessing ? (
+                <div className="flex h-full flex-col items-center justify-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="mt-4 text-lg font-semibold">Extracting details...</p>
+                </div>
             ) : (
                 <>
                     <SheetHeader>
@@ -255,3 +266,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
