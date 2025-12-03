@@ -67,7 +67,7 @@ export default function HomePage() {
   }, [filteredExpenses]);
 
   useEffect(() => {
-    if (!carouselApi) {
+    if (!carouselApi || categoryTotals.length === 0) {
       return;
     }
   
@@ -75,25 +75,25 @@ export default function HomePage() {
       setActiveSlide(api.selectedScrollSnap());
     };
   
-    const onInit = (api: CarouselApi) => {
-      if (categoryTotals.length > 1) {
-        const middleIndex = Math.floor(categoryTotals.length / 2);
-        api.scrollTo(middleIndex, true);
-        setActiveSlide(middleIndex);
-      } else {
-        setActiveSlide(api.selectedScrollSnap());
-      }
-    };
+    // Initial setup
+    const middleIndex = Math.floor(categoryTotals.length / 2);
+    carouselApi.scrollTo(middleIndex, true); // true for instant
+    setActiveSlide(middleIndex);
   
-    onInit(carouselApi);
     carouselApi.on('select', onSelect);
-    carouselApi.on('reInit', onInit);
+    carouselApi.on('reInit', () => {
+        // Re-center on re-initialization
+        const newMiddleIndex = Math.floor(categoryTotals.length / 2);
+        carouselApi.scrollTo(newMiddleIndex, true);
+        setActiveSlide(newMiddleIndex);
+    });
   
     return () => {
+      // Make sure to turn off listeners
       carouselApi.off('select', onSelect);
-      carouselApi.off('reInit', onInit);
+      carouselApi.off('reInit');
     };
-  }, [carouselApi, categoryTotals.length]);
+  }, [carouselApi, categoryTotals.length]); // Rerun when carousel or data changes
   
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -467,10 +467,4 @@ export default function HomePage() {
       </Sheet>
     </div>
   );
-
-    
-
-
-    
-
-    
+}
