@@ -23,6 +23,88 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/com
 
 type FilterType = 'all' | 'month' | 'today' | 'yesterday' | 'week' | 'last-month';
 
+function ExpenseCard({ expense, removeExpense }: { expense: Expense; removeExpense: (id: string) => void; }) {
+  const { formatCurrency } = useSettings();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const category = CATEGORIES.find(c => c.name === expense.category);
+  const Icon = category?.icon;
+
+  const handlePointerDown = () => {
+    longPressTimer.current = setTimeout(() => {
+      setIsDialogOpen(true);
+    }, 700); // 700ms for long press
+  };
+
+  const handlePointerUp = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handlePointerLeave = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  return (
+    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Card
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        className="group transform-gpu transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:scale-105 active:scale-95"
+      >
+        <div className="flex items-center p-3 md:p-4">
+          {Icon && (
+            <div className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12 md:mr-4">
+              <Icon className="h-5 w-5 text-secondary-foreground md:h-6 md:w-6" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold truncate">{expense.reason}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {format(parseISO(expense.date), 'MMM d, h:mm a')} • {expense.category}
+            </p>
+          </div>
+          <div className="ml-2 md:ml-4 flex items-center">
+            <p className="text-md font-bold text-right shrink-0 md:text-lg">
+              {formatCurrency(expense.amount)}
+            </p>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-1 md:ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-100 md:opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </AlertDialogTrigger>
+          </div>
+        </div>
+      </Card>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete this expense record.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={() => removeExpense(expense.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
   const { formatCurrency } = useSettings();
@@ -35,7 +117,7 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [activeSlide, setActiveSlide] = useState(0);
-
+  
   const sortedExpenses = useMemo(() => {
     if (!isInitialized) return [];
     return [...expenses].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
@@ -93,7 +175,7 @@ export default function HomePage() {
       carouselApi.off('reInit', onSelect);
     };
   }, [carouselApi, categoryTotals.length]);
-  
+
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -267,7 +349,7 @@ export default function HomePage() {
                         <CardTitle className="text-xl font-medium">This Month</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
+                        <p className="text-4xl lg:text-5xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
                     </CardContent>
                 </Card>
                  <Card>
@@ -275,7 +357,7 @@ export default function HomePage() {
                         <CardTitle className="text-xl font-medium">Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold">{summaryStats.transactions}</p>
+                        <p className="text-4xl lg:text-5xl font-bold">{summaryStats.transactions}</p>
                     </CardContent>
                 </Card>
               </div>
@@ -329,60 +411,10 @@ export default function HomePage() {
           {filteredExpenses.length > 0 ? (
             <div className="w-full">
               <ScrollArea className="h-[calc(100vh-620px)] md:h-[calc(100vh-480px)]">
-                <div className="space-y-4 px-1">
-                  {filteredExpenses.map(expense => {
-                    const category = CATEGORIES.find(c => c.name === expense.category);
-                    const Icon = category?.icon;
-
-                    return (
-                      <Card key={expense.id} className="group transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:scale-105">
-                        <div className="flex items-center p-3 md:p-4">
-                          {Icon && (
-                            <div className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12 md:mr-4">
-                              <Icon className="h-5 w-5 text-secondary-foreground md:h-6 md:w-6" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold truncate">{expense.reason}</p>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {format(parseISO(expense.date), 'MMM d, h:mm a')} • {expense.category}
-                            </p>
-                          </div>
-                          <div className="ml-2 md:ml-4 flex items-center">
-                            <p className="text-md font-bold text-right md:text-lg">
-                              {formatCurrency(expense.amount)}
-                            </p>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="ml-1 md:ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-100 md:opacity-0 transition-opacity group-hover:opacity-100"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete this expense record.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => removeExpense(expense.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
+                <div className="space-y-4 px-2">
+                  {filteredExpenses.map(expense => (
+                    <ExpenseCard key={expense.id} expense={expense} removeExpense={removeExpense} />
+                  ))}
                 </div>
               </ScrollArea>
             </div>
@@ -477,5 +509,7 @@ export default function HomePage() {
       </Sheet>
     </div>
   );
+
+    
 
     
