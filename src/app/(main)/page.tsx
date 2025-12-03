@@ -93,7 +93,7 @@ export default function HomePage() {
       carouselApi.off('select', onSelect);
       carouselApi.off('reInit');
     };
-  }, [carouselApi, categoryTotals.length]); // Rerun when carousel or data changes
+  }, [carouselApi, categoryTotals.length]);
   
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -244,8 +244,8 @@ export default function HomePage() {
                   className="cursor-pointer transition-all animate-pulse-slow hover:animate-none flex items-center justify-between p-6 group h-full"
                 >
                   <div>
-                    <CardTitle className="text-sm font-medium">{activeSummary.title}</CardTitle>
-                    <p className="text-3xl font-bold">{formatCurrency(activeSummary.value)}</p>
+                    <CardTitle className="text-lg font-medium">{activeSummary.title}</CardTitle>
+                    <p className="text-4xl font-bold">{formatCurrency(activeSummary.value)}</p>
                   </div>
                   <ArrowRight className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </Card>
@@ -254,18 +254,18 @@ export default function HomePage() {
               <div className="grid grid-rows-2 gap-4 md:col-span-1">
                  <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                        <CardTitle className="text-lg font-medium">This Month</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
+                        <p className="text-3xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
                     </CardContent>
                 </Card>
                  <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+                        <CardTitle className="text-lg font-medium">Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{summaryStats.transactions}</p>
+                        <p className="text-3xl font-bold">{summaryStats.transactions}</p>
                     </CardContent>
                 </Card>
               </div>
@@ -276,7 +276,7 @@ export default function HomePage() {
               <h2 className="text-lg font-semibold mb-4 text-center">Spending by Category</h2>
                 <Carousel 
                     setApi={setCarouselApi}
-                    opts={{ align: 'center', loop: categoryTotals.length > 2 }} 
+                    opts={{ align: 'center', loop: categoryTotals.length > 2, startIndex: 1 }} 
                     className="w-full"
                 >
                   <CarouselContent className="-ml-4">
