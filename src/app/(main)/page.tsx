@@ -34,7 +34,7 @@ export default function HomePage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  const [activeSlide, setActiveSlide] = useState(1);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -44,16 +44,18 @@ export default function HomePage() {
     };
 
     const onInit = (api: CarouselApi) => {
-       setActiveSlide(api.selectedScrollSnap());
+       const selected = api.selectedScrollSnap();
+       setActiveSlide(selected);
     }
 
+    onInit(carouselApi);
     carouselApi.on("select", onSelect);
-    carouselApi.on("init", onInit);
+    carouselApi.on("reInit", onInit);
 
     return () => {
       if (carouselApi) {
         carouselApi.off("select", onSelect);
-        carouselApi.off("init", onInit);
+        carouselApi.off("reInit", onInit);
       }
     };
   }, [carouselApi]);
@@ -286,8 +288,8 @@ export default function HomePage() {
                             )}>
                               <CardContent className="p-4 flex flex-col items-center justify-center text-center aspect-[4/3]">
                                 <div className={cn(
-                                  "mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-secondary transition-all duration-300",
-                                  isActive && `bg-primary text-primary-foreground`
+                                  "mb-3 flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300",
+                                  isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                                 )}>
                                   <Icon className="h-8 w-8" />
                                 </div>
@@ -378,9 +380,9 @@ export default function HomePage() {
          <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Skeleton className="h-24 w-full md:col-span-2" />
-                <div className="grid grid-cols-2 gap-4 md:col-span-1">
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
+                <div className="grid grid-cols-2 gap-4 md:col-span-1 md:grid-rows-2">
+                  <Skeleton className="h-24 md:h-auto w-full" />
+                  <Skeleton className="h-24 md:h-auto w-full" />
                 </div>
             </div>
              <div className="space-y-4 pt-4">
