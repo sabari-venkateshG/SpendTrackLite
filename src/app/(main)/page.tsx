@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Plus, Loader2, ScanLine, Edit, Trash2, ShoppingBag } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
@@ -10,14 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getExpenseDetailsFromImage } from '@/app/actions';
 import type { ExpenseCategory, Expense } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ExpenseForm } from '@/components/expenses/expense-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format, parseISO, isToday, isThisMonth } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 type FilterType = 'all' | 'month' | 'today';
@@ -135,6 +135,19 @@ export default function HomePage() {
     }
   }, [expenses]);
 
+  const categoryTotals = useMemo(() => {
+    const totals = expenses.reduce((acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      return acc;
+    }, {} as Record<ExpenseCategory, number>);
+
+    return CATEGORIES.map(category => ({
+      ...category,
+      total: totals[category.name] || 0,
+    })).filter(c => c.total > 0).sort((a,b) => b.total - a.total);
+
+  }, [expenses]);
+
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -184,8 +197,33 @@ export default function HomePage() {
               </Card>
           </div>
 
+          {categoryTotals.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex w-max space-x-4 pb-4">
+                  {categoryTotals.map(category => {
+                    const Icon = category.icon;
+                    return (
+                      <Card key={category.name} className="w-40 flex-shrink-0 transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
+                         <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
+                            <Icon className="h-6 w-6 text-secondary-foreground" />
+                          </div>
+                          <p className="text-sm font-semibold truncate">{category.name}</p>
+                          <p className="text-lg font-bold">{formatCurrency(category.total)}</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </div>
+          )}
+
           {filteredExpenses.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-420px)] md:h-[calc(100vh-350px)]">
+            <ScrollArea className="h-[calc(100vh-560px)] md:h-[calc(100vh-480px)]">
               <div className="space-y-4 pr-4">
                 {filteredExpenses.map(expense => {
                   const category = CATEGORIES.find(c => c.name === expense.category);
@@ -245,7 +283,7 @@ export default function HomePage() {
           ) : (
             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card p-12 text-center shadow-sm min-h-[calc(100vh-420px)] md:min-h-[calc(100vh-350px)]">
                 <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">No Expenses for this Period</h3>
+                <h3 className="mt-4 text-lg font-semibold">No Expenses Recorded</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Click the "+" button to add an expense.
                 </p>
@@ -258,6 +296,9 @@ export default function HomePage() {
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full col-span-2 md:col-span-1" />
+            </div>
+             <div className="space-y-4">
+                <Skeleton className="h-28 w-full" />
             </div>
             <div className="space-y-4">
                 <Skeleton className="h-24 w-full" />
