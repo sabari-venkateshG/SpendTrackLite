@@ -38,10 +38,21 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!carouselApi) return;
-    const onSelect = () => setActiveSlide(carouselApi.selectedScrollSnap());
+    
+    const onSelect = () => {
+      setActiveSlide(carouselApi.selectedScrollSnap());
+    };
+
+    const onInit = () => {
+       setActiveSlide(carouselApi.selectedScrollSnap());
+    }
+
     carouselApi.on("select", onSelect);
+    carouselApi.on("init", onInit);
+
     return () => {
       carouselApi.off("select", onSelect);
+      carouselApi.off("init", onInit);
     };
   }, [carouselApi]);
   
@@ -238,7 +249,7 @@ export default function HomePage() {
                         <CardTitle className="text-sm font-medium">This Month</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{formatCurrency(summaryStats.month)}</p>
+                        <p className="text-2xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
                     </CardContent>
                 </Card>
                  <Card>
@@ -443,6 +454,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
-    
