@@ -170,14 +170,14 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
       </div>
 
       <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-        <ScrollArea className="w-full whitespace-nowrap rounded-md border md:w-auto md:border-0">
+        <div className="w-full overflow-x-auto pb-1">
           <TabsList className="w-max">
               <TabsTrigger value="30-day">Last 30 Days</TabsTrigger>
               <TabsTrigger value="6-month">Last 6 Months</TabsTrigger>
               <TabsTrigger value="annual">This Year</TabsTrigger>
               <TabsTrigger value="all">All Time</TabsTrigger>
           </TabsList>
-        </ScrollArea>
+        </div>
         <TabsContent value={timeRange} className="mt-6">
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
