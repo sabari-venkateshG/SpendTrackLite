@@ -36,6 +36,36 @@ export default function HomePage() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [activeSlide, setActiveSlide] = useState(0);
 
+  const sortedExpenses = useMemo(() => {
+    if (!isInitialized) return [];
+    return [...expenses].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+  }, [expenses, isInitialized]);
+
+  const filteredExpenses = useMemo(() => {
+    if (activeFilter === 'all') return sortedExpenses;
+    return sortedExpenses.filter(exp => {
+        const expenseDate = parseISO(exp.date);
+        if (activeFilter === 'today') return isToday(expenseDate);
+        if (activeFilter === 'month') return isThisMonth(expenseDate);
+        if (activeFilter === 'yesterday') return isYesterday(expenseDate);
+        if (activeFilter === 'week') return isThisWeek(expenseDate, { weekStartsOn: 1 });
+        return true;
+    });
+  }, [sortedExpenses, activeFilter]);
+  
+  const categoryTotals = useMemo(() => {
+    const totals = filteredExpenses.reduce((acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      return acc;
+    }, {} as Record<ExpenseCategory, number>);
+
+    return CATEGORIES.map(category => ({
+      ...category,
+      total: totals[category.name] || 0,
+    })).filter(c => c.total > 0).sort((a,b) => b.total - a.total);
+
+  }, [filteredExpenses]);
+
   useEffect(() => {
     if (!carouselApi) return;
     
@@ -45,14 +75,14 @@ export default function HomePage() {
 
     const onInit = (api: CarouselApi) => {
        if (categoryTotals.length > 1) {
-        api.scrollTo(1, true); // Instantly scroll to the second slide
+        api.scrollTo(1, false); // Instantly scroll to the second slide
        }
        setActiveSlide(api.selectedScrollSnap());
     }
 
-    onInit(carouselApi);
     carouselApi.on("select", onSelect);
     carouselApi.on("reInit", onInit);
+    onInit(carouselApi);
 
     return () => {
       if (carouselApi) {
@@ -138,23 +168,6 @@ export default function HomePage() {
     setIsSheetOpen(open);
   }
 
-  const sortedExpenses = useMemo(() => {
-    if (!isInitialized) return [];
-    return [...expenses].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
-  }, [expenses, isInitialized]);
-
-  const filteredExpenses = useMemo(() => {
-    if (activeFilter === 'all') return sortedExpenses;
-    return sortedExpenses.filter(exp => {
-        const expenseDate = parseISO(exp.date);
-        if (activeFilter === 'today') return isToday(expenseDate);
-        if (activeFilter === 'month') return isThisMonth(expenseDate);
-        if (activeFilter === 'yesterday') return isYesterday(expenseDate);
-        if (activeFilter === 'week') return isThisWeek(expenseDate, { weekStartsOn: 1 });
-        return true;
-    });
-  }, [sortedExpenses, activeFilter]);
-
   const summaryStats = useMemo(() => {
     const todayExpenses = sortedExpenses.filter(e => isToday(parseISO(e.date)));
     const yesterdayExpenses = sortedExpenses.filter(e => isYesterday(parseISO(e.date)));
@@ -180,20 +193,6 @@ export default function HomePage() {
       transactions: activeExpenses.length,
     }
   }, [sortedExpenses, activeFilter]);
-
-
-  const categoryTotals = useMemo(() => {
-    const totals = filteredExpenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-      return acc;
-    }, {} as Record<ExpenseCategory, number>);
-
-    return CATEGORIES.map(category => ({
-      ...category,
-      total: totals[category.name] || 0,
-    })).filter(c => c.total > 0).sort((a,b) => b.total - a.total);
-
-  }, [filteredExpenses]);
 
   const summaryCycle: {filter: FilterType, title: string, value: number}[] = [
     { filter: 'today', title: "Today's Spend", value: summaryStats.today },
@@ -459,6 +458,5 @@ export default function HomePage() {
       </Sheet>
     </div>
   );
-}
 
     
