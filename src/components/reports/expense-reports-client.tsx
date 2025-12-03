@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CATEGORIES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { ScrollArea } from '../ui/scroll-area';
 
 
 const COLORS = [
@@ -169,12 +170,14 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
       </div>
 
       <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-        <TabsList className="grid grid-cols-4 w-full md:w-auto">
-          <TabsTrigger value="30-day">Last 30 Days</TabsTrigger>
-          <TabsTrigger value="6-month">Last 6 Months</TabsTrigger>
-          <TabsTrigger value="annual">This Year</TabsTrigger>
-          <TabsTrigger value="all">All Time</TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full whitespace-nowrap md:w-auto">
+            <TabsList className="w-max">
+                <TabsTrigger value="30-day">Last 30 Days</TabsTrigger>
+                <TabsTrigger value="6-month">Last 6 Months</TabsTrigger>
+                <TabsTrigger value="annual">This Year</TabsTrigger>
+                <TabsTrigger value="all">All Time</TabsTrigger>
+            </TabsList>
+        </ScrollArea>
         <TabsContent value={timeRange} className="mt-6">
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
