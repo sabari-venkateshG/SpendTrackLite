@@ -139,19 +139,31 @@ export default function HomePage() {
   }, [sortedExpenses, activeFilter]);
 
   const summaryStats = useMemo(() => {
-    const todayExpenses = expenses.filter(e => isToday(parseISO(e.date)));
-    const yesterdayExpenses = expenses.filter(e => isYesterday(parseISO(e.date)));
-    const weekExpenses = expenses.filter(e => isThisWeek(parseISO(e.date), { weekStartsOn: 1 }));
-    const monthExpenses = expenses.filter(e => isThisMonth(parseISO(e.date)));
+    const todayExpenses = sortedExpenses.filter(e => isToday(parseISO(e.date)));
+    const yesterdayExpenses = sortedExpenses.filter(e => isYesterday(parseISO(e.date)));
+    const weekExpenses = sortedExpenses.filter(e => isThisWeek(parseISO(e.date), { weekStartsOn: 1 }));
+    const monthExpenses = sortedExpenses.filter(e => isThisMonth(parseISO(e.date)));
+    const allExpenses = sortedExpenses;
     
+    let activeExpenses;
+    switch(activeFilter) {
+      case 'today': activeExpenses = todayExpenses; break;
+      case 'yesterday': activeExpenses = yesterdayExpenses; break;
+      case 'week': activeExpenses = weekExpenses; break;
+      case 'month': activeExpenses = monthExpenses; break;
+      case 'all': activeExpenses = allExpenses; break;
+      default: activeExpenses = monthExpenses;
+    }
+
     return {
       today: todayExpenses.reduce((sum, e) => sum + e.amount, 0),
       yesterday: yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0),
       week: weekExpenses.reduce((sum, e) => sum + e.amount, 0),
       month: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
-      transactions: filteredExpenses.length,
+      transactions: activeExpenses.length,
     }
-  }, [expenses, filteredExpenses]);
+  }, [sortedExpenses, activeFilter]);
+
 
   const categoryTotals = useMemo(() => {
     const totals = filteredExpenses.reduce((acc, expense) => {
@@ -220,8 +232,8 @@ export default function HomePage() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
-                <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
+              <div className="grid grid-cols-2 gap-4 md:col-span-1">
+                 <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">This Month</CardTitle>
                     </CardHeader>
@@ -229,9 +241,9 @@ export default function HomePage() {
                         <p className="text-2xl font-bold">{formatCurrency(summaryStats.month)}</p>
                     </CardContent>
                 </Card>
-                <Card onClick={() => setActiveFilter('all')} className={cn("cursor-pointer transition-all", activeFilter === 'all' && 'ring-2 ring-primary')}>
+                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+                        <CardTitle className="text-sm font-medium">Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold">{summaryStats.transactions}</p>
@@ -242,7 +254,7 @@ export default function HomePage() {
 
           {categoryTotals.length > 0 && (
             <div className="pt-4">
-              <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
+              <h2 className="text-lg font-semibold mb-4 text-center">Spending by Category</h2>
                 <Carousel 
                     setApi={setCarouselApi}
                     opts={{ align: 'center', loop: categoryTotals.length > 2 }} 
@@ -280,63 +292,65 @@ export default function HomePage() {
           )}
 
           {filteredExpenses.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-560px)] md:h-[calc(100vh-480px)]">
-              <div className="space-y-4 pr-4">
-                {filteredExpenses.map(expense => {
-                  const category = CATEGORIES.find(c => c.name === expense.category);
-                  const Icon = category?.icon;
+            <div className="w-full">
+              <ScrollArea className="h-[calc(100vh-560px)] md:h-[calc(100vh-480px)]">
+                <div className="space-y-4 pr-4">
+                  {filteredExpenses.map(expense => {
+                    const category = CATEGORIES.find(c => c.name === expense.category);
+                    const Icon = category?.icon;
 
-                  return (
-                    <Card key={expense.id} className="group transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:scale-[1.02]">
-                      <div className="flex items-center p-4">
-                        {Icon && (
-                          <div className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12">
-                            <Icon className="h-5 w-5 text-secondary-foreground md:h-6 md:w-6" />
+                    return (
+                      <Card key={expense.id} className="group transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:scale-[1.02]">
+                        <div className="flex items-center p-4">
+                          {Icon && (
+                            <div className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary md:h-12 md:w-12">
+                              <Icon className="h-5 w-5 text-secondary-foreground md:h-6 md:w-6" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold truncate">{expense.reason}</p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {format(parseISO(expense.date), 'MMM d, yyyy, h:mm a')} • {expense.category}
+                            </p>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold truncate">{expense.reason}</p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {format(parseISO(expense.date), 'MMM d, yyyy, h:mm a')} • {expense.category}
-                          </p>
+                          <div className="ml-4 flex items-center">
+                            <p className="text-md font-bold text-right md:text-lg">
+                              {formatCurrency(expense.amount)}
+                            </p>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this expense record.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => removeExpense(expense.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
-                        <div className="ml-4 flex items-center">
-                          <p className="text-md font-bold text-right md:text-lg">
-                            {formatCurrency(expense.amount)}
-                          </p>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="ml-2 h-8 w-8 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete this expense record.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => removeExpense(expense.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            </ScrollArea>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card p-12 text-center shadow-sm min-h-[calc(100vh-420px)] md:min-h-[calc(100vh-350px)]">
                 <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
@@ -349,15 +363,22 @@ export default function HomePage() {
         </div>
       ) : (
          <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full col-span-2 md:col-span-1" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Skeleton className="h-24 w-full md:col-span-2" />
+                <div className="grid grid-cols-2 gap-4 md:col-span-1">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
             </div>
-             <div className="space-y-4">
-                <Skeleton className="h-28 w-full" />
+             <div className="space-y-4 pt-4">
+                <Skeleton className="h-8 w-48 mx-auto" />
+                <div className="flex justify-center gap-4">
+                  <Skeleton className="h-32 w-40" />
+                  <Skeleton className="h-32 w-40" />
+                  <Skeleton className="h-32 w-40" />
+                </div>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 pt-8">
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
@@ -423,4 +444,5 @@ export default function HomePage() {
   );
 }
 
+    
     
