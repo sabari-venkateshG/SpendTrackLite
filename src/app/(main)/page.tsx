@@ -175,7 +175,7 @@ export default function HomePage() {
             </div>
           )}
           {sortedExpenses.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-450px)]">
+            <ScrollArea className="h-[calc(100vh-350px)]">
               <div className="space-y-4 pr-4">
                 {sortedExpenses.map(expense => {
                   const category = CATEGORIES.find(c => c.name === expense.category);
@@ -290,5 +290,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

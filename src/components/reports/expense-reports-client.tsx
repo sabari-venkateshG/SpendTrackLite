@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import type { Expense } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, parseISO, format } from 'date-fns';
+import { startOfMonth, subDays, subMonths, startOfYear, parseISO, format } from 'date-fns';
 import { useSettings } from '@/hooks/use-settings';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CATEGORIES } from '@/lib/constants';
@@ -22,26 +22,31 @@ const COLORS = [
   'hsl(var(--chart-5))',
 ];
 
+type TimeRange = '30-day' | '6-month' | 'annual' | 'all';
+
 export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
-  const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
+  const [timeRange, setTimeRange] = useState<TimeRange>('30-day');
   const { formatCurrency } = useSettings();
 
   const filteredData = useMemo(() => {
+    if (timeRange === 'all') {
+      return expenses;
+    }
+    
     const now = new Date();
     let startDate: Date;
     let endDate: Date = now;
 
     switch (timeRange) {
-      case 'monthly':
-        startDate = startOfMonth(now);
-        endDate = endOfMonth(now);
+      case '30-day':
+        startDate = subDays(now, 29);
+        startDate.setHours(0, 0, 0, 0);
         break;
       case '6-month':
         startDate = startOfMonth(subMonths(now, 5));
         break;
       case 'annual':
         startDate = startOfYear(now);
-        endDate = endOfYear(now);
         break;
     }
 
@@ -63,17 +68,16 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
     return Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value }));
   }, [filteredData]);
 
-  type TimeRange = 'monthly' | '6-month' | 'annual';
 
   const trendData = useMemo(() => {
     const trendMap = new Map<string, number>();
     
-    if (timeRange === 'monthly') {
+    if (timeRange === '30-day') {
       filteredData.forEach(exp => {
         const day = format(parseISO(exp.date), 'MMM d');
         trendMap.set(day, (trendMap.get(day) || 0) + exp.amount);
       });
-    } else { // 6-month or annual
+    } else { // 6-month or annual or all
       filteredData.forEach(exp => {
         const month = format(parseISO(exp.date), 'MMM yyyy');
         trendMap.set(month, (trendMap.get(month) || 0) + exp.amount);
@@ -82,7 +86,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
 
     let data = Array.from(trendMap.entries()).map(([name, total]) => ({ name, total }));
 
-    if (timeRange === '6-month' || timeRange === 'annual') {
+    if (timeRange !== '30-day') {
       data.sort((a,b) => new Date(a.name).getTime() - new Date(b.name).getTime());
       data = data.map(d => ({...d, name: d.name.split(' ')[0]}));
     }
@@ -111,7 +115,7 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
   const handleExport = () => {
     const headers = ["Date", "Reason", "Category", "Amount"];
     const rows = filteredData.map(exp => [
-      format(parseISO(exp.date), 'yyyy-MM-dd'),
+      format(parseISO(exp.date), 'yyyy-MM-dd HH:mm'),
       `"${exp.reason.replace(/"/g, '""')}"`,
       exp.category,
       exp.amount.toFixed(2)
@@ -165,10 +169,11 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
       </div>
 
       <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-        <TabsList>
-          <TabsTrigger value="monthly">This Month</TabsTrigger>
+        <TabsList className="grid grid-cols-4 w-full md:w-auto">
+          <TabsTrigger value="30-day">Last 30 Days</TabsTrigger>
           <TabsTrigger value="6-month">Last 6 Months</TabsTrigger>
           <TabsTrigger value="annual">This Year</TabsTrigger>
+          <TabsTrigger value="all">All Time</TabsTrigger>
         </TabsList>
         <TabsContent value={timeRange} className="mt-6">
           <div className="grid gap-4 md:grid-cols-3">
@@ -248,14 +253,14 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
             </Card>
           </div>
 
-          {categoryMonthlyBreakdown.length > 0 && (
+          {timeRange !== '30-day' && categoryMonthlyBreakdown.length > 0 && (
             <Card className="mt-8">
               <CardHeader>
                 <CardTitle>Monthly Category Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
                 {categoryMonthlyBreakdown.map(([month, categories]) => (
-                  <div key={month} className="mb-6">
+                  <div key={month} className="mb-6 last:mb-0">
                     <h3 className="text-lg font-semibold mb-2">{month}</h3>
                     <Table>
                       <TableHeader>
