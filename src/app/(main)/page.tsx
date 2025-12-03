@@ -44,8 +44,10 @@ export default function HomePage() {
     };
 
     const onInit = (api: CarouselApi) => {
-       const selected = api.selectedScrollSnap();
-       setActiveSlide(selected);
+       if (categoryTotals.length > 1) {
+        api.scrollTo(1, true); // Instantly scroll to the second slide
+       }
+       setActiveSlide(api.selectedScrollSnap());
     }
 
     onInit(carouselApi);
@@ -58,7 +60,7 @@ export default function HomePage() {
         carouselApi.off("reInit", onInit);
       }
     };
-  }, [carouselApi]);
+  }, [carouselApi, categoryTotals.length]);
   
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -458,3 +460,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
