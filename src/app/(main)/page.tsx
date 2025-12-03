@@ -15,13 +15,13 @@ import { ExpenseForm } from '@/components/expenses/expense-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { format, parseISO, isToday, isThisMonth } from 'date-fns';
+import { format, parseISO, isToday, isThisMonth, isYesterday, isThisWeek } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
-type FilterType = 'all' | 'month' | 'today';
+type FilterType = 'all' | 'month' | 'today' | 'yesterday' | 'week';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
@@ -121,16 +121,22 @@ export default function HomePage() {
         const expenseDate = parseISO(exp.date);
         if (activeFilter === 'today') return isToday(expenseDate);
         if (activeFilter === 'month') return isThisMonth(expenseDate);
+        if (activeFilter === 'yesterday') return isYesterday(expenseDate);
+        if (activeFilter === 'week') return isThisWeek(expenseDate, { weekStartsOn: 1 });
         return true;
     });
   }, [sortedExpenses, activeFilter]);
 
   const summaryStats = useMemo(() => {
     const todayExpenses = expenses.filter(e => isToday(parseISO(e.date)));
+    const yesterdayExpenses = expenses.filter(e => isYesterday(parseISO(e.date)));
+    const weekExpenses = expenses.filter(e => isThisWeek(parseISO(e.date), { weekStartsOn: 1 }));
     const monthExpenses = expenses.filter(e => isThisMonth(parseISO(e.date)));
     
     return {
       today: todayExpenses.reduce((sum, e) => sum + e.amount, 0),
+      yesterday: yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0),
+      week: weekExpenses.reduce((sum, e) => sum + e.amount, 0),
       month: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
       transactions: filteredExpenses.length,
     }
@@ -149,6 +155,11 @@ export default function HomePage() {
 
   }, [filteredExpenses]);
 
+  const summaryCards: {filter: FilterType, title: string, value: number}[] = [
+    { filter: 'today', title: "Today's Spend", value: summaryStats.today },
+    { filter: 'yesterday', title: "Yesterday's Spend", value: summaryStats.yesterday },
+    { filter: 'week', title: "This Week's Spend", value: summaryStats.week },
+  ];
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -171,31 +182,53 @@ export default function HomePage() {
 
       {isInitialized ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Card onClick={() => setActiveFilter('today')} className={cn("cursor-pointer transition-all", activeFilter === 'today' && 'ring-2 ring-primary')}>
-                  <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Today's Spend</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <p className="text-2xl font-bold">{formatCurrency(summaryStats.today)}</p>
-                  </CardContent>
-              </Card>
-              <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
-                  <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">This Month</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <p className="text-2xl font-bold">{formatCurrency(summaryStats.month)}</p>
-                  </CardContent>
-              </Card>
-              <Card onClick={() => setActiveFilter('all')} className={cn("cursor-pointer transition-all col-span-2 md:col-span-1", activeFilter === 'all' && 'ring-2 ring-primary')}>
-                  <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <p className="text-2xl font-bold">{summaryStats.transactions}</p>
-                  </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <Carousel
+                  opts={{
+                    align: "start",
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {summaryCards.map((card, index) => (
+                      <CarouselItem key={index} className="md:basis-1/2">
+                         <div className="p-1">
+                          <Card onClick={() => setActiveFilter(card.filter)} className={cn("cursor-pointer transition-all", activeFilter === card.filter && 'ring-2 ring-primary')}>
+                              <CardHeader className="pb-2">
+                                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                  <p className="text-2xl font-bold">{formatCurrency(card.value)}</p>
+                              </CardContent>
+                          </Card>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden md:flex" />
+                  <CarouselNext className="hidden md:flex" />
+                </Carousel>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-4 p-1">
+                <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold">{formatCurrency(summaryStats.month)}</p>
+                    </CardContent>
+                </Card>
+                <Card onClick={() => setActiveFilter('all')} className={cn("cursor-pointer transition-all", activeFilter === 'all' && 'ring-2 ring-primary')}>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold">{summaryStats.transactions}</p>
+                    </CardContent>
+                </Card>
+              </div>
           </div>
 
           {categoryTotals.length > 0 && (
@@ -376,5 +409,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
