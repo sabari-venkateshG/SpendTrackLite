@@ -17,8 +17,9 @@ import { CATEGORIES } from '@/lib/constants';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format, parseISO, isToday, isThisMonth } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 type FilterType = 'all' | 'month' | 'today';
 
@@ -200,12 +201,20 @@ export default function HomePage() {
           {categoryTotals.length > 0 && (
             <div>
               <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
-              <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex w-max space-x-4 pb-4">
-                  {categoryTotals.map(category => {
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: categoryTotals.length > 3,
+                }}
+                className="w-full"
+              >
+                <CarouselContent>
+                  {categoryTotals.map((category, index) => {
                     const Icon = category.icon;
-                    return (
-                      <Card key={category.name} className="w-40 flex-shrink-0 transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
+                    return(
+                    <CarouselItem key={index} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
+                      <div className="p-1">
+                      <Card className="w-full flex-shrink-0 transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
                          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
                           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
                             <Icon className="h-6 w-6 text-secondary-foreground" />
@@ -214,11 +223,13 @@ export default function HomePage() {
                           <p className="text-lg font-bold">{formatCurrency(category.total)}</p>
                         </CardContent>
                       </Card>
-                    );
-                  })}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+                      </div>
+                    </CarouselItem>
+                  )})}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex" />
+              </Carousel>
             </div>
           )}
 
