@@ -34,28 +34,28 @@
     --radius: 0.75rem;
 
     /* Category Colors */
-    --cat-food: 0 84.2% 60.2%;
-    --cat-food-foreground: 0 0% 98%;
-    --cat-transport: 221.2 83.2% 53.3%;
-    --cat-transport-foreground: 0 0% 98%;
-    --cat-utilities: 47.9 95.8% 53.1%;
-    --cat-utilities-foreground: 24 9.8% 10%;
-    --cat-entertainment: 274.6 60.3% 50.2%;
-    --cat-entertainment-foreground: 0 0% 98%;
-    --cat-health: 142.1 76.2% 36.3%;
-    --cat-health-foreground: 0 0% 98%;
-    --cat-shopping: 333.1 82.3% 56.1%;
-    --cat-shopping-foreground: 0 0% 98%;
-    --cat-travel: 255.1 82.8% 60.8%;
-    --cat-travel-foreground: 0 0% 98%;
-    --cat-education: 173.8 80.5% 38.2%;
-    --cat-education-foreground: 0 0% 98%;
-    --cat-gifts: 35.5 91.7% 54.9%;
-    --cat-gifts-foreground: 24 9.8% 10%;
-    --cat-fuel: 220 8.9% 46.1%;
-    --cat-fuel-foreground: 0 0% 98%;
-    --cat-other: 220 5.9% 73.1%;
-    --cat-other-foreground: 24 9.8% 10%;
+    --cat-food: 345 80% 60%;
+    --cat-food-foreground: 345 80% 98%;
+    --cat-transport: 220 80% 65%;
+    --cat-transport-foreground: 220 80% 98%;
+    --cat-utilities: 190 70% 55%;
+    --cat-utilities-foreground: 190 70% 98%;
+    --cat-entertainment: 270 60% 65%;
+    --cat-entertainment-foreground: 270 60% 98%;
+    --cat-health: 140 60% 50%;
+    --cat-health-foreground: 140 60% 98%;
+    --cat-shopping: 310 70% 60%;
+    --cat-shopping-foreground: 310 70% 98%;
+    --cat-travel: 250 80% 70%;
+    --cat-travel-foreground: 250 80% 98%;
+    --cat-education: 170 75% 50%;
+    --cat-education-foreground: 170 75% 98%;
+    --cat-gifts: 40 90% 60%;
+    --cat-gifts-foreground: 40 90% 98%;
+    --cat-fuel: 20 80% 55%;
+    --cat-fuel-foreground: 20 80% 98%;
+    --cat-other: 240 5% 70%;
+    --cat-other-foreground: 240 5% 98%;
   }
 
   .dark {
@@ -87,28 +87,28 @@
     --chart-5: 280 70% 75%;
 
     /* Category Colors */
-    --cat-food: 0 72.2% 50.6%;
-    --cat-food-foreground: 0 0% 98%;
-    --cat-transport: 221.2 83.2% 58.3%;
-    --cat-transport-foreground: 0 0% 98%;
-    --cat-utilities: 47.9 95.8% 58.1%;
-    --cat-utilities-foreground: 24 9.8% 10%;
-    --cat-entertainment: 274.6 60.3% 55.2%;
-    --cat-entertainment-foreground: 0 0% 98%;
-    --cat-health: 142.1 70.2% 41.3%;
-    --cat-health-foreground: 0 0% 98%;
-    --cat-shopping: 333.1 78.3% 61.1%;
-    --cat-shopping-foreground: 0 0% 98%;
-    --cat-travel: 255.1 78.8% 65.8%;
-    --cat-travel-foreground: 0 0% 98%;
-    --cat-education: 173.8 75.5% 43.2%;
-    --cat-education-foreground: 0 0% 98%;
-    --cat-gifts: 35.5 91.7% 59.9%;
-    --cat-gifts-foreground: 24 9.8% 10%;
-    --cat-fuel: 220 8.9% 51.1%;
-    --cat-fuel-foreground: 0 0% 98%;
-    --cat-other: 220 5.9% 78.1%;
-    --cat-other-foreground: 24 9.8% 10%;
+    --cat-food: 345 70% 50%;
+    --cat-food-foreground: 345 70% 95%;
+    --cat-transport: 220 70% 55%;
+    --cat-transport-foreground: 220 70% 95%;
+    --cat-utilities: 190 60% 45%;
+    --cat-utilities-foreground: 190 60% 95%;
+    --cat-entertainment: 270 50% 55%;
+    --cat-entertainment-foreground: 270 50% 95%;
+    --cat-health: 140 50% 40%;
+    --cat-health-foreground: 140 50% 95%;
+    --cat-shopping: 310 60% 50%;
+    --cat-shopping-foreground: 310 60% 95%;
+    --cat-travel: 250 70% 60%;
+    --cat-travel-foreground: 250 70% 95%;
+    --cat-education: 170 65% 40%;
+    --cat-education-foreground: 170 65% 95%;
+    --cat-gifts: 40 80% 50%;
+    --cat-gifts-foreground: 40 80% 95%;
+    --cat-fuel: 20 70% 45%;
+    --cat-fuel-foreground: 20 70% 95%;
+    --cat-other: 240 5% 60%;
+    --cat-other-foreground: 240 5% 95%;
   }
 }
 
@@ -141,6 +141,17 @@
       opacity: 0.95;
     }
   }
-}
 
-    
+  /* Custom text colors for categories */
+  .text-cat-food { color: hsl(var(--cat-food)); }
+  .text-cat-transport { color: hsl(var(--cat-transport)); }
+  .text-cat-utilities { color: hsl(var(--cat-utilities)); }
+  .text-cat-entertainment { color: hsl(var(--cat-entertainment)); }
+  .text-cat-health { color: hsl(var(--cat-health)); }
+  .text-cat-shopping { color: hsl(var(--cat-shopping)); }
+  .text-cat-travel { color: hsl(var(--cat-travel)); }
+  .text-cat-education { color: hsl(var(--cat-education)); }
+  .text-cat-gifts { color: hsl(var(--cat-gifts)); }
+  .text-cat-fuel { color: hsl(var(--cat-fuel)); }
+  .text-cat-other { color: hsl(var(--cat-other)); }
+}

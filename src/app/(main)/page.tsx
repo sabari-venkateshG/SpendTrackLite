@@ -74,11 +74,14 @@ export default function HomePage() {
     };
 
     const onInit = (api: CarouselApi) => {
-       if (categoryTotals.length > 1) {
-        api.scrollTo(1, false); // Instantly scroll to the second slide
-       }
-       setActiveSlide(api.selectedScrollSnap());
-    }
+      if (categoryTotals.length > 1) {
+        const middleIndex = Math.floor(categoryTotals.length / 2);
+        api.scrollTo(middleIndex, true); 
+        setActiveSlide(middleIndex);
+      } else {
+        setActiveSlide(api.selectedScrollSnap());
+      }
+    };
 
     carouselApi.on("select", onSelect);
     carouselApi.on("reInit", onInit);
@@ -283,16 +286,22 @@ export default function HomePage() {
                       return (
                         <CarouselItem key={index} className="basis-1/2 md:basis-1/3 pl-4">
                           <div className="perspective-1000">
-                            <Card className={cn(
+                             <Card 
+                              className={cn(
                                 "w-full transition-all duration-500 ease-in-out transform-style-3d",
                                 isActive ? 'transform scale-100 opacity-100' : 'transform scale-75 opacity-60'
-                            )}>
+                              )}
+                              style={{
+                                backgroundColor: isActive ? `hsl(var(--cat-${category.color}))` : undefined,
+                                color: isActive ? `hsl(var(--cat-${category.color}-foreground))` : undefined,
+                              }}
+                            >
                               <CardContent className="p-4 flex flex-col items-center justify-center text-center aspect-[4/3]">
                                 <div className={cn(
                                   "mb-3 flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300",
-                                  isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+                                   isActive ? 'bg-background/20' : 'bg-secondary'
                                 )}>
-                                  <Icon className="h-8 w-8" />
+                                  <Icon className={cn("h-8 w-8", isActive ? '' : `text-cat-${category.color}`)} />
                                 </div>
                                 <p className="text-md font-semibold truncate">{category.name}</p>
                                 <p className="text-2xl font-bold">{formatCurrency(category.total)}</p>
