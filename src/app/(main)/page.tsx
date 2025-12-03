@@ -34,7 +34,7 @@ export default function HomePage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(1);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -43,16 +43,18 @@ export default function HomePage() {
       setActiveSlide(carouselApi.selectedScrollSnap());
     };
 
-    const onInit = () => {
-       setActiveSlide(carouselApi.selectedScrollSnap());
+    const onInit = (api: CarouselApi) => {
+       setActiveSlide(api.selectedScrollSnap());
     }
 
     carouselApi.on("select", onSelect);
     carouselApi.on("init", onInit);
 
     return () => {
-      carouselApi.off("select", onSelect);
-      carouselApi.off("init", onInit);
+      if (carouselApi) {
+        carouselApi.off("select", onSelect);
+        carouselApi.off("init", onInit);
+      }
     };
   }, [carouselApi]);
   
@@ -233,7 +235,7 @@ export default function HomePage() {
               <div className="md:col-span-2">
                 <Card 
                   onClick={handleSummaryCardClick} 
-                  className="cursor-pointer transition-all animate-pulse-slow hover:animate-none flex items-center justify-between p-6 group"
+                  className="cursor-pointer transition-all animate-pulse-slow hover:animate-none flex items-center justify-between p-6 group h-full"
                 >
                   <div>
                     <CardTitle className="text-sm font-medium">{activeSummary.title}</CardTitle>
@@ -243,7 +245,7 @@ export default function HomePage() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 md:col-span-1">
+              <div className="grid grid-rows-2 gap-4 md:col-span-1">
                  <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">This Month</CardTitle>
@@ -268,7 +270,7 @@ export default function HomePage() {
               <h2 className="text-lg font-semibold mb-4 text-center">Spending by Category</h2>
                 <Carousel 
                     setApi={setCarouselApi}
-                    opts={{ align: 'center', loop: categoryTotals.length > 2 }} 
+                    opts={{ align: 'center', loop: categoryTotals.length > 2, startIndex: 1 }} 
                     className="w-full"
                 >
                   <CarouselContent className="-ml-4">
@@ -305,7 +307,7 @@ export default function HomePage() {
           {filteredExpenses.length > 0 ? (
             <div className="w-full">
               <ScrollArea className="h-[calc(100vh-560px)] md:h-[calc(100vh-480px)]">
-                <div className="space-y-4 pr-4">
+                <div className="space-y-4 px-2">
                   {filteredExpenses.map(expense => {
                     const category = CATEGORIES.find(c => c.name === expense.category);
                     const Icon = category?.icon;
