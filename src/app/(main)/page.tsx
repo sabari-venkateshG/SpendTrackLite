@@ -15,13 +15,13 @@ import { ExpenseForm } from '@/components/expenses/expense-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { format, parseISO, isToday, isThisMonth, isYesterday, isThisWeek } from 'date-fns';
+import { format, parseISO, isToday, isThisMonth, isYesterday, isThisWeek, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 
-type FilterType = 'all' | 'month' | 'today' | 'yesterday' | 'week';
+type FilterType = 'all' | 'month' | 'today' | 'yesterday' | 'week' | 'last-month';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
@@ -43,12 +43,17 @@ export default function HomePage() {
 
   const filteredExpenses = useMemo(() => {
     if (activeFilter === 'all') return sortedExpenses;
+    const now = new Date();
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const lastMonthEnd = endOfMonth(subMonths(now, 1));
+    
     return sortedExpenses.filter(exp => {
         const expenseDate = parseISO(exp.date);
         if (activeFilter === 'today') return isToday(expenseDate);
         if (activeFilter === 'month') return isThisMonth(expenseDate);
         if (activeFilter === 'yesterday') return isYesterday(expenseDate);
         if (activeFilter === 'week') return isThisWeek(expenseDate, { weekStartsOn: 1 });
+        if (activeFilter === 'last-month') return expenseDate >= lastMonthStart && expenseDate <= lastMonthEnd;
         return true;
     });
   }, [sortedExpenses, activeFilter]);
@@ -67,31 +72,27 @@ export default function HomePage() {
   }, [filteredExpenses]);
 
   useEffect(() => {
-    if (!carouselApi || categoryTotals.length === 0) {
+    if (!carouselApi) {
       return;
     }
-  
+    
     const onSelect = (api: CarouselApi) => {
       setActiveSlide(api.selectedScrollSnap());
     };
   
-    // Initial setup
-    const middleIndex = Math.floor(categoryTotals.length / 2);
-    carouselApi.scrollTo(middleIndex, true); // true for instant
-    setActiveSlide(middleIndex);
-  
     carouselApi.on('select', onSelect);
-    carouselApi.on('reInit', () => {
-        // Re-center on re-initialization
-        const newMiddleIndex = Math.floor(categoryTotals.length / 2);
-        carouselApi.scrollTo(newMiddleIndex, true);
-        setActiveSlide(newMiddleIndex);
-    });
+    carouselApi.on('reInit', onSelect);
   
+    // Set the initial slide
+    if (categoryTotals.length > 0) {
+      const middleIndex = Math.floor(categoryTotals.length / 2);
+      carouselApi.scrollTo(middleIndex, true); // true for instant
+      setActiveSlide(middleIndex);
+    }
+    
     return () => {
-      // Make sure to turn off listeners
       carouselApi.off('select', onSelect);
-      carouselApi.off('reInit');
+      carouselApi.off('reInit', onSelect);
     };
   }, [carouselApi, categoryTotals.length]);
   
@@ -172,10 +173,18 @@ export default function HomePage() {
   }
 
   const summaryStats = useMemo(() => {
+    const now = new Date();
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const lastMonthEnd = endOfMonth(subMonths(now, 1));
+
     const todayExpenses = sortedExpenses.filter(e => isToday(parseISO(e.date)));
     const yesterdayExpenses = sortedExpenses.filter(e => isYesterday(parseISO(e.date)));
     const weekExpenses = sortedExpenses.filter(e => isThisWeek(parseISO(e.date), { weekStartsOn: 1 }));
     const monthExpenses = sortedExpenses.filter(e => isThisMonth(parseISO(e.date)));
+    const lastMonthExpenses = sortedExpenses.filter(e => {
+      const expenseDate = parseISO(e.date);
+      return expenseDate >= lastMonthStart && expenseDate <= lastMonthEnd;
+    });
     const allExpenses = sortedExpenses;
     
     let activeExpenses;
@@ -184,6 +193,7 @@ export default function HomePage() {
       case 'yesterday': activeExpenses = yesterdayExpenses; break;
       case 'week': activeExpenses = weekExpenses; break;
       case 'month': activeExpenses = monthExpenses; break;
+      case 'last-month': activeExpenses = lastMonthExpenses; break;
       case 'all': activeExpenses = allExpenses; break;
       default: activeExpenses = monthExpenses;
     }
@@ -193,6 +203,7 @@ export default function HomePage() {
       yesterday: yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0),
       week: weekExpenses.reduce((sum, e) => sum + e.amount, 0),
       month: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
+      lastMonth: lastMonthExpenses.reduce((sum, e) => sum + e.amount, 0),
       transactions: activeExpenses.length,
     }
   }, [sortedExpenses, activeFilter]);
@@ -201,6 +212,7 @@ export default function HomePage() {
     { filter: 'today', title: "Today's Spend", value: summaryStats.today },
     { filter: 'yesterday', title: "Yesterday's Spend", value: summaryStats.yesterday },
     { filter: 'week', title: "This Week's Spend", value: summaryStats.week },
+    { filter: 'last-month', title: "Last Month's Spend", value: summaryStats.lastMonth },
   ];
 
   const activeSummaryIndex = useMemo(() => {
@@ -245,7 +257,7 @@ export default function HomePage() {
                 >
                   <div>
                     <CardTitle className="text-lg font-medium">{activeSummary.title}</CardTitle>
-                    <p className="text-4xl font-bold">{formatCurrency(activeSummary.value)}</p>
+                    <p className="text-5xl font-bold">{formatCurrency(activeSummary.value)}</p>
                   </div>
                   <ArrowRight className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </Card>
@@ -257,7 +269,7 @@ export default function HomePage() {
                         <CardTitle className="text-lg font-medium">This Month</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
+                        <p className="text-4xl font-bold break-words">{formatCurrency(summaryStats.month)}</p>
                     </CardContent>
                 </Card>
                  <Card>
@@ -265,7 +277,7 @@ export default function HomePage() {
                         <CardTitle className="text-lg font-medium">Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-bold">{summaryStats.transactions}</p>
+                        <p className="text-4xl font-bold">{summaryStats.transactions}</p>
                     </CardContent>
                 </Card>
               </div>
@@ -276,7 +288,7 @@ export default function HomePage() {
               <h2 className="text-lg font-semibold mb-4 text-center">Spending by Category</h2>
                 <Carousel 
                     setApi={setCarouselApi}
-                    opts={{ align: 'center', loop: categoryTotals.length > 2, startIndex: 1 }} 
+                    opts={{ align: 'center', loop: categoryTotals.length > 2 }} 
                     className="w-full"
                 >
                   <CarouselContent className="-ml-4">
