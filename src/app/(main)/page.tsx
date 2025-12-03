@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { Plus, Loader2, ScanLine, Edit, Trash2, ShoppingBag } from 'lucide-react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { Plus, Loader2, ScanLine, Edit, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useExpenses } from '@/hooks/use-expenses';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import { format, parseISO, isToday, isThisMonth, isYesterday, isThisWeek } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 
 type FilterType = 'all' | 'month' | 'today' | 'yesterday' | 'week';
 
@@ -33,7 +33,18 @@ export default function HomePage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('month');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [activeSlide, setActiveSlide] = useState(0);
 
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setActiveSlide(carouselApi.selectedScrollSnap());
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
+  
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -155,11 +166,24 @@ export default function HomePage() {
 
   }, [filteredExpenses]);
 
-  const summaryCards: {filter: FilterType, title: string, value: number}[] = [
+  const summaryCycle: {filter: FilterType, title: string, value: number}[] = [
     { filter: 'today', title: "Today's Spend", value: summaryStats.today },
     { filter: 'yesterday', title: "Yesterday's Spend", value: summaryStats.yesterday },
     { filter: 'week', title: "This Week's Spend", value: summaryStats.week },
   ];
+
+  const activeSummaryIndex = useMemo(() => {
+    const index = summaryCycle.findIndex(s => s.filter === activeFilter);
+    return index === -1 ? 0 : index;
+  }, [activeFilter, summaryCycle]);
+
+
+  const handleSummaryCardClick = () => {
+    const nextIndex = (activeSummaryIndex + 1) % summaryCycle.length;
+    setActiveFilter(summaryCycle[nextIndex].filter);
+  };
+  
+  const activeSummary = summaryCycle[activeSummaryIndex];
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -184,34 +208,19 @@ export default function HomePage() {
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
-                <Carousel
-                  opts={{
-                    align: "start",
-                  }}
-                  className="w-full"
+                <Card 
+                  onClick={handleSummaryCardClick} 
+                  className="cursor-pointer transition-all animate-pulse-slow hover:animate-none flex items-center justify-between p-6 group"
                 >
-                  <CarouselContent>
-                    {summaryCards.map((card, index) => (
-                      <CarouselItem key={index} className="md:basis-1/2">
-                         <div className="p-1">
-                          <Card onClick={() => setActiveFilter(card.filter)} className={cn("cursor-pointer transition-all", activeFilter === card.filter && 'ring-2 ring-primary')}>
-                              <CardHeader className="pb-2">
-                                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                  <p className="text-2xl font-bold">{formatCurrency(card.value)}</p>
-                              </CardContent>
-                          </Card>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="hidden md:flex" />
-                  <CarouselNext className="hidden md:flex" />
-                </Carousel>
+                  <div>
+                    <CardTitle className="text-sm font-medium">{activeSummary.title}</CardTitle>
+                    <p className="text-3xl font-bold">{formatCurrency(activeSummary.value)}</p>
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                </Card>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-1 gap-4 p-1">
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                 <Card onClick={() => setActiveFilter('month')} className={cn("cursor-pointer transition-all", activeFilter === 'month' && 'ring-2 ring-primary')}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">This Month</CardTitle>
@@ -232,37 +241,41 @@ export default function HomePage() {
           </div>
 
           {categoryTotals.length > 0 && (
-            <div>
+            <div className="pt-4">
               <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
-              <Carousel
-                opts={{
-                  align: "start",
-                  loop: categoryTotals.length > 3,
-                }}
-                className="w-full"
-              >
-                <CarouselContent>
-                  {categoryTotals.map((category, index) => {
-                    const Icon = category.icon;
-                    return(
-                    <CarouselItem key={index} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
-                      <div className="p-1">
-                      <Card className="w-full flex-shrink-0 transition-all duration-300 ease-in-out hover:bg-accent hover:shadow-xl hover:-translate-y-1">
-                         <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-secondary group-hover:bg-background transition-colors">
-                            <Icon className="h-6 w-6 text-secondary-foreground" />
+                <Carousel 
+                    setApi={setCarouselApi}
+                    opts={{ align: 'center', loop: categoryTotals.length > 2 }} 
+                    className="w-full"
+                >
+                  <CarouselContent className="-ml-4">
+                    {categoryTotals.map((category, index) => {
+                      const Icon = category.icon;
+                      const isActive = index === activeSlide;
+                      return (
+                        <CarouselItem key={index} className="basis-1/2 md:basis-1/3 pl-4">
+                          <div className="perspective-1000">
+                            <Card className={cn(
+                                "w-full transition-all duration-500 ease-in-out transform-style-3d",
+                                isActive ? 'transform scale-100 opacity-100' : 'transform scale-75 opacity-60'
+                            )}>
+                              <CardContent className="p-4 flex flex-col items-center justify-center text-center aspect-[4/3]">
+                                <div className={cn(
+                                  "mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-secondary transition-all duration-300",
+                                  isActive && `bg-primary text-primary-foreground`
+                                )}>
+                                  <Icon className="h-8 w-8" />
+                                </div>
+                                <p className="text-md font-semibold truncate">{category.name}</p>
+                                <p className="text-2xl font-bold">{formatCurrency(category.total)}</p>
+                              </CardContent>
+                            </Card>
                           </div>
-                          <p className="text-sm font-semibold truncate">{category.name}</p>
-                          <p className="text-lg font-bold">{formatCurrency(category.total)}</p>
-                        </CardContent>
-                      </Card>
-                      </div>
-                    </CarouselItem>
-                  )})}
-                </CarouselContent>
-                <CarouselPrevious className="hidden md:flex" />
-                <CarouselNext className="hidden md:flex" />
-              </Carousel>
+                        </CarouselItem>
+                      );
+                    })}
+                  </CarouselContent>
+                </Carousel>
             </div>
           )}
 
@@ -329,7 +342,7 @@ export default function HomePage() {
                 <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No Expenses Recorded</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Click the "+" button to add an expense.
+                  Click the "+" button to add an expense for this period.
                 </p>
             </div>
           )}
@@ -409,3 +422,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

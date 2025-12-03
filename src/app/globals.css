@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -119,3 +120,27 @@
     @apply bg-background text-foreground transition-colors duration-300;
   }
 }
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-slow {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 0.95;
+    }
+  }
+}
+
+    
