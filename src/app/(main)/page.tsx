@@ -67,31 +67,31 @@ export default function HomePage() {
   }, [filteredExpenses]);
 
   useEffect(() => {
-    if (!carouselApi) return;
-    
-    const onSelect = () => {
-      setActiveSlide(carouselApi.selectedScrollSnap());
+    if (!carouselApi) {
+      return;
+    }
+  
+    const onSelect = (api: CarouselApi) => {
+      setActiveSlide(api.selectedScrollSnap());
     };
-
+  
     const onInit = (api: CarouselApi) => {
       if (categoryTotals.length > 1) {
         const middleIndex = Math.floor(categoryTotals.length / 2);
-        api.scrollTo(middleIndex, true); 
+        api.scrollTo(middleIndex, true);
         setActiveSlide(middleIndex);
       } else {
         setActiveSlide(api.selectedScrollSnap());
       }
     };
-
-    carouselApi.on("select", onSelect);
-    carouselApi.on("reInit", onInit);
+  
     onInit(carouselApi);
-
+    carouselApi.on('select', onSelect);
+    carouselApi.on('reInit', onInit);
+  
     return () => {
-      if (carouselApi) {
-        carouselApi.off("select", onSelect);
-        carouselApi.off("reInit", onInit);
-      }
+      carouselApi.off('select', onSelect);
+      carouselApi.off('reInit', onInit);
     };
   }, [carouselApi, categoryTotals.length]);
   
@@ -470,5 +470,7 @@ export default function HomePage() {
 
     
 
+
+    
 
     
