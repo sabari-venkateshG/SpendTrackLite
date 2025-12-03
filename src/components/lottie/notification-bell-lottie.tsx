@@ -300,5 +300,5 @@ const animationData = {
 };
 
 export const NotificationBellLottie = () => {
-    return <Lottie animationData={animationData} loop={true} style={{width: 64, height: 64}} />;
+    return <Lottie animationData={animationData} loop={true} style={{width: 32, height: 32}} />;
 };

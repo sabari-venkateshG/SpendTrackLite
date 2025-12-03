@@ -169,5 +169,5 @@ const animationData = {
 };
 
 export const SuccessCheckmarkLottie = () => {
-    return <Lottie animationData={animationData} loop={false} style={{width: 64, height: 64}} />;
+    return <Lottie animationData={animationData} loop={false} style={{width: 32, height: 32}} />;
 };
