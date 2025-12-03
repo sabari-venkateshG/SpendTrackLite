@@ -33,6 +33,11 @@ export function useSettings() {
 
   const loadLocalSettings = useCallback(() => {
     let loadedSettings = { ...defaultSettings };
+    if (typeof window === 'undefined') {
+        setSettingsState(loadedSettings);
+        setIsInitialized(true);
+        return;
+    }
     try {
       const storedSettings = localStorage.getItem('spendtrack-lite-settings');
       if (storedSettings) {
@@ -66,15 +71,12 @@ export function useSettings() {
   const setSettings = useCallback((newSettings: Partial<Settings>) => {
      setSettingsState(prev => {
         const updatedSettings = { ...prev, ...newSettings };
-        localStorage.setItem('spendtrack-lite-settings', JSON.stringify({
-          name: updatedSettings.name,
-          currency: updatedSettings.currency
-        }));
-        // Manually dispatch a storage event to sync across tabs/components
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'spendtrack-lite-settings',
-          newValue: JSON.stringify(updatedSettings),
-        }));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('spendtrack-lite-settings', JSON.stringify({
+              name: updatedSettings.name,
+              currency: updatedSettings.currency
+            }));
+        }
         return updatedSettings;
     });
   }, []);
