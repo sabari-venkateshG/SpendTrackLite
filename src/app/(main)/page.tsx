@@ -132,12 +132,12 @@ export default function HomePage() {
     return {
       today: todayExpenses.reduce((sum, e) => sum + e.amount, 0),
       month: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
-      transactions: expenses.length,
+      transactions: filteredExpenses.length,
     }
-  }, [expenses]);
+  }, [expenses, filteredExpenses]);
 
   const categoryTotals = useMemo(() => {
-    const totals = expenses.reduce((acc, expense) => {
+    const totals = filteredExpenses.reduce((acc, expense) => {
       acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
       return acc;
     }, {} as Record<ExpenseCategory, number>);
@@ -147,7 +147,7 @@ export default function HomePage() {
       total: totals[category.name] || 0,
     })).filter(c => c.total > 0).sort((a,b) => b.total - a.total);
 
-  }, [expenses]);
+  }, [filteredExpenses]);
 
 
   return (
@@ -376,3 +376,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
