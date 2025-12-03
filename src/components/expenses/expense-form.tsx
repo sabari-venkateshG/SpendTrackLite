@@ -17,7 +17,6 @@ import { CATEGORIES, CATEGORY_NAMES } from '@/lib/constants';
 import type { Expense } from '@/lib/types';
 import { CalendarIcon } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
-import { Card, CardContent } from '../ui/card';
 
 const formSchema = z.object({
   amount: z.coerce.number({invalid_type_error: 'Please enter a valid amount.'}).min(0.01, 'Amount must be greater than $0.00.'),
@@ -182,54 +181,3 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
     </Form>
   );
 }
-
-
-interface ExpenseFormSuccessProps {
-    expense: Omit<Expense, 'id' | 'owner'>;
-    onDone: () => void;
-}
-
-export function ExpenseFormSuccess({ expense, onDone }: ExpenseFormSuccessProps) {
-    const { formatCurrency } = useSettings();
-    const category = CATEGORIES.find(c => c.name === expense.category);
-    const Icon = category?.icon;
-
-    return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-16 h-16 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold mt-4">Expense Saved!</h2>
-            <p className="text-muted-foreground mb-6">Your expense has been recorded.</p>
-            
-            <Card className="w-full text-left">
-                <CardContent className="p-4">
-                    <div className="flex items-center">
-                        {Icon && (
-                            <div className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
-                                <Icon className="h-5 w-5 text-secondary-foreground" />
-                            </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                            <p className="font-bold truncate">{expense.reason}</p>
-                            <p className="text-sm text-muted-foreground truncate">
-                                {expense.category}
-                            </p>
-                        </div>
-                         <p className="text-lg font-bold ml-4">
-                            {formatCurrency(expense.amount)}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Button onClick={onDone} className="mt-8 w-full">
-                Done
-            </Button>
-        </div>
-    );
-}
-
-    

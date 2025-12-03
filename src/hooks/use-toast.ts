@@ -179,25 +179,24 @@ function useToast() {
       }
     }
   }, [state])
-  
-  React.useEffect(() => {
-    const { toasts } = state
 
-    if (toasts.length === 0) return;
-    
-    const timers = toasts.map(toast => {
-        if (toast.open && toast.duration) {
-            return setTimeout(() => {
-                dispatch({ type: 'DISMISS_TOAST', toastId: toast.id });
-            }, toast.duration);
-        }
-        return null;
+  React.useEffect(() => {
+    const timers = state.toasts.map((t) => {
+      if (t.open && t.duration) {
+        const timeout = setTimeout(() => {
+          dispatch({ type: 'DISMISS_TOAST', toastId: t.id });
+        }, t.duration);
+        return timeout;
+      }
+      return null;
     });
 
     return () => {
-        timers.forEach(timer => {
-            if (timer) clearTimeout(timer);
-        });
+      timers.forEach((timeout) => {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+      });
     };
   }, [state.toasts]);
 
@@ -209,3 +208,5 @@ function useToast() {
 }
 
 export { useToast, toast }
+
+  
