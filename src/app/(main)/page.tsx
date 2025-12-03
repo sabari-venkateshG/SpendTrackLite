@@ -12,13 +12,14 @@ import type { ExpenseCategory, Expense } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ExpenseForm } from '@/components/expenses/expense-form';
-import { TickAnimation } from '@/components/tick-animation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/lib/constants';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format, parseISO } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SuccessLottie } from '@/components/lottie/success-lottie';
+import { EmptyStateLottie } from '@/components/lottie/empty-state-lottie';
 
 export default function HomePage() {
   const { expenses, addExpense, removeExpense, isInitialized } = useExpenses();
@@ -109,7 +110,7 @@ export default function HomePage() {
         title: 'Expense Saved!',
         description: (
           <div className="flex items-center gap-2">
-            <TickAnimation />
+            <SuccessLottie />
             <p>{expense.reason} for {formatCurrency(expense.amount)}</p>
           </div>
         ),
@@ -243,7 +244,7 @@ export default function HomePage() {
             </ScrollArea>
           ) : (
              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card p-12 text-center shadow-sm min-h-[400px]">
-                <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
+                <EmptyStateLottie />
                 <h3 className="mt-4 text-lg font-semibold">No Expenses Yet</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Click the "+" button to add your first expense.
