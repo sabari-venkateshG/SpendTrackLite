@@ -41,7 +41,18 @@ export default function HomePage() {
       const dataUri = reader.result as string;
       try {
         const result = await getExpenseDetailsFromImage(dataUri);
-        const parsedDate = new Date(result.date);
+        
+        let parsedDate;
+        try {
+          // Attempt to parse the date string from AI. This may fail if format is unexpected.
+          parsedDate = new Date(result.date);
+          if (isNaN(parsedDate.getTime())) {
+            // If parsing fails, default to now.
+            parsedDate = new Date();
+          }
+        } catch (e) {
+          parsedDate = new Date();
+        }
         
         // Remove commas before parsing to handle large numbers correctly
         const amountString = result.amount.replace(/,/g, '');
@@ -50,7 +61,7 @@ export default function HomePage() {
         const newExpense: Partial<Omit<Expense, 'id' | 'owner'>> = {
           amount: isNaN(parsedAmount) ? 0 : parsedAmount,
           reason: result.vendor,
-          date: isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString(),
+          date: parsedDate.toISOString(),
           category: result.category as ExpenseCategory,
         };
 
@@ -95,13 +106,11 @@ export default function HomePage() {
     setIsSheetOpen(false);
     setEditingExpense(null);
     toast({
+        title: 'Expense Saved!',
         description: (
-          <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex items-center gap-2">
             <TickAnimation />
-            <div>
-                <p className="font-bold text-lg">Expense Saved!</p>
-                <p>{expense.reason} for {formatCurrency(expense.amount)}</p>
-            </div>
+            <p>{expense.reason} for {formatCurrency(expense.amount)}</p>
           </div>
         ),
         duration: 3000,
@@ -290,3 +299,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

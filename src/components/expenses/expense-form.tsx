@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -33,6 +33,7 @@ interface ExpenseFormProps {
 }
 
 export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -95,7 +96,7 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Date & Time</FormLabel>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -114,7 +115,12 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      if (date) {
+                        field.onChange(date);
+                        setIsCalendarOpen(false);
+                      }
+                    }}
                     disabled={(date) => date > new Date()}
                     initialFocus
                   />
@@ -172,3 +178,5 @@ export function ExpenseForm({ expense, onSave, onCancel }: ExpenseFormProps) {
     </Form>
   );
 }
+
+    
