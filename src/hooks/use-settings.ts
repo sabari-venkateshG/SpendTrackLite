@@ -76,11 +76,6 @@ export function useSettings() {
               name: updatedSettings.name,
               currency: updatedSettings.currency
             }));
-            // Manually dispatch storage event to sync across hooks on the same page
-            window.dispatchEvent(new StorageEvent('storage', {
-              key: 'spendtrack-lite-settings',
-              newValue: JSON.stringify(updatedSettings)
-            }));
         }
         return updatedSettings;
     });
