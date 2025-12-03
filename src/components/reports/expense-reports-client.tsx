@@ -298,5 +298,3 @@ export function ExpenseReportsClient({ expenses }: { expenses: Expense[] }) {
     </div>
   );
 }
-
-    
